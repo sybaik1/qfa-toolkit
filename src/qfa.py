@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import (ABC, abstractmethod, )
+import numpy as np
 
 
 class QuantumState:
@@ -8,9 +9,9 @@ class QuantumState:
 
 
 class QuantumFiniteAutomatonBase(ABC):
-    _states: int
-    _alphabet: int
-    # _transition: np.array(dim=(alphabet, states, states))
+    _alphabet: set
+    _statesname: list
+    # _transition: np.array(dim=(len(alphabet), len(statesname), len(statesname))
 
     @abstractmethod
     def step(self, psi: QuantumState, string: str) -> QuantumState:
