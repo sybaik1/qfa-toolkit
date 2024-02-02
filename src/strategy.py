@@ -11,4 +11,4 @@ class RecognitionStrategy:
         pass
 
     def __call__(self, probability: float) -> Result:
-        pass
+        raise NotImplementedError()

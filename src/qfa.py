@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import (ABC, abstractmethod, )
 
 
@@ -13,15 +14,68 @@ class QuantumFiniteAutomatonBase(ABC):
 
     @abstractmethod
     def step(self, psi: QuantumState, string: str) -> QuantumState:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def process(self, psi: QuantumState, w: str) -> QuantumState:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def test(self, w: str) -> bool:
-        pass
+        raise NotImplementedError()
+
+    @abstractmethod
+    def concatination(self, other: QuantumFiniteAutomatonBase) \
+            -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def union(self, other: QuantumFiniteAutomatonBase) \
+            -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def intersection(self, other: QuantumFiniteAutomatonBase) \
+            -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def complement(self) -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def difference(self, other: QuantumFiniteAutomatonBase) \
+            -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def equivalence(self, other: QuantumFiniteAutomatonBase) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def minimize(self) -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def symmetric_difference(self, other: QuantumFiniteAutomatonBase) \
+            -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def kleene_star(self) -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def kleene_plus(self) -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def reverse(self) -> QuantumFiniteAutomatonBase:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def is_empty(self) -> bool:
+        raise NotImplementedError()
 
 
 class DynamicConfiguration:
@@ -39,15 +93,3 @@ class DynamicConfiguration:
 
     def process(self, w: str) -> None:
         pass
-
-
-class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
-    def __init__(self, qfa, measure) -> None:
-        self.qfa = qfa
-        self.measure = measure
-
-
-class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
-    def __init__(self, qfa, measure) -> None:
-        self.qfa = qfa
-        self.measure = measure
