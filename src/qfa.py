@@ -28,18 +28,21 @@ class QuantumFiniteAutomatonBase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def concatination(self, other: QuantumFiniteAutomatonBase) \
-            -> QuantumFiniteAutomatonBase:
+    def concatination(
+        self, other: QuantumFiniteAutomatonBase
+    ) -> QuantumFiniteAutomatonBase:
         raise NotImplementedError()
 
     @abstractmethod
-    def union(self, other: QuantumFiniteAutomatonBase) \
-            -> QuantumFiniteAutomatonBase:
+    def union(
+        self, other: QuantumFiniteAutomatonBase
+    ) -> QuantumFiniteAutomatonBase:
         raise NotImplementedError()
 
     @abstractmethod
-    def intersection(self, other: QuantumFiniteAutomatonBase) \
-            -> QuantumFiniteAutomatonBase:
+    def intersection(
+        self, other: QuantumFiniteAutomatonBase
+    ) -> QuantumFiniteAutomatonBase:
         raise NotImplementedError()
 
     @abstractmethod
@@ -47,8 +50,9 @@ class QuantumFiniteAutomatonBase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def difference(self, other: QuantumFiniteAutomatonBase) \
-            -> QuantumFiniteAutomatonBase:
+    def difference(
+        self, other: QuantumFiniteAutomatonBase
+    ) -> QuantumFiniteAutomatonBase:
         raise NotImplementedError()
 
     @abstractmethod
@@ -60,8 +64,9 @@ class QuantumFiniteAutomatonBase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def symmetric_difference(self, other: QuantumFiniteAutomatonBase) \
-            -> QuantumFiniteAutomatonBase:
+    def symmetric_difference(
+        self, other: QuantumFiniteAutomatonBase
+    ) -> QuantumFiniteAutomatonBase:
         raise NotImplementedError()
 
     @abstractmethod
