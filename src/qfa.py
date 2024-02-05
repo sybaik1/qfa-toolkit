@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import (ABC, abstractmethod, )
 import numpy as np
+import numpy.typing as npt
 
 
 class QuantumState:
@@ -12,6 +13,7 @@ class QuantumFiniteAutomatonBase(ABC):
     _alphabet: set
     _statesname: list
     # _transition: np.array(dim=(len(alphabet), len(statesname), len(statesname))
+    _transition: npt.NDArray[np.cdouble]
 
     @abstractmethod
     def step(self, psi: QuantumState, string: str) -> QuantumState:
