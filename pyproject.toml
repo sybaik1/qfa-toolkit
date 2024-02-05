@@ -1,7 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+
+[project]
+name = "qfa-toolkit"
+authors = [
+  {name = "SeungYeop Baik", email = "sybaik2006@gmail.com"},
+  {name = "Sicheol Sung", email = "sicheol.sung@yonsei.ac.kr"},
+  {name = "Sungmin Kim", email = "rena_rio@yonsei.ac.kr"},
+]
+dependencies = [
+  "numpy~=1.26.3"
+]
+version = "0.0.1"
+
 # mypy global options:
 
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
-plugins = numpy.typing.mypy_plugin
+plugins = "numpy.typing.mypy_plugin"
