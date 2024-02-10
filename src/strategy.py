@@ -27,8 +27,10 @@ class RecognitionStrategy:
                 "than or equal to reject_upperbound"
             )
 
-        self.accept_lowerbound = accept_lowerbound
         self.reject_upperbound = reject_upperbound
+        self.accept_lowerbound = accept_lowerbound
+        self.reject_inclusive = reject_inclusive
+        self.accept_inclusive = accept_inclusive
 
     def __call__(self, probability: float) -> Result:
         if probability < self.reject_upperbound:
