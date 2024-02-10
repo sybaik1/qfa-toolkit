@@ -1,6 +1,6 @@
 import unittest
 
-import strategy
+import src.strategy as strategy
 
 
 class TestStrategy(unittest.TestCase):

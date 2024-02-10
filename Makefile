@@ -8,4 +8,4 @@ dev:
 
 .PHONY: test
 test:
-	python -m unittest test/strategy_test.py
+	python -m unittest
