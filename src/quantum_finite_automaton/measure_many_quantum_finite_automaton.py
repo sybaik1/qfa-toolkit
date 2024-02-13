@@ -26,7 +26,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             state < self.states for state
             in accepting_states | rejecting_states
         ):
-            raise ValueError("Non-halting states must be a subset of states")
+            raise ValueError("Halting states must be a subset of states")
         if len(accepting_states & rejecting_states) != 0:
             raise ValueError("Accepting and rejecting states must be disjoint")
 
