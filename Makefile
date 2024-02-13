@@ -1,15 +1,33 @@
+VENV := .venv
+PYTHON := $(VENV)/bin/python
+PIP := $(VENV)/bin/pip
+TARGET := $(VENV)/bin/
+
+.PHONY: default
+default:
+
 .PHONY: install
-install:
-	pip install .
+install: $(VENV)
+	$(PIP) install .
 
 .PHONY: dev
-dev:
-	pip install -e .
+dev: $(VENV)
+	$(PIP) install -e .
 
 .PHONY: test
-test:
-	python -m unittest
+test: $(VENV)
+	$(PYTHON) -m unittest
 
 .PHONY: clean
 clean:
-	pip uninstall qfa_toolkit -y
+	rm -rf $(VENV)
+
+.PHONY: vim
+vim: .git
+	vim $$(git ls-files)
+
+.git:
+	git init
+
+$(VENV):
+	python3 -m venv $(VENV)
