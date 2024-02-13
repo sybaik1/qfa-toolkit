@@ -110,6 +110,14 @@ class QuantumFiniteAutomatonBase(abc.ABC):
     def end_of_string(self) -> int:
         return self.alphabet + 1
 
+    def __call__(self, w: list[int]) -> float:
+        tape = [0] + w + [self.end_of_string]
+        last_total_state = self.process(TotalState.initial(self.states), tape)
+        _, acceptance, rejection = last_total_state.to_tuple()
+        if not math.isclose(acceptance + rejection, 1):
+            raise InvalidQauntumFiniteAutomatonException()
+        return acceptance
+
     @abc.abstractmethod
     def process(self, total_state: TotalState, w: list[int]) -> TotalState:
         raise NotImplementedError()
@@ -119,15 +127,11 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __call__(self, w: list[int]) -> float:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def concatination(self: T, other: T) -> T:
+    def concatenation(self: T, other: T) -> T:
         raise NotImplementedError()
 
     def __concat__(self: T, other: T) -> T:
-        return self.concatination(other)
+        return self.concatenation(other)
 
     @abc.abstractmethod
     def union(self: T, other: T) -> T:

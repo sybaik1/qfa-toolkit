@@ -46,10 +46,10 @@ class RecognitionStrategy:
             raise ValueError("probability must be between 0.0 and 1.0")
 
         if self.reject_inclusive:
-            if math.isclose(probability, self.reject_upperbound):
+            if math.isclose(probability, self.reject_upperbound, abs_tol=1e-9):
                 return RecognitionStrategy.Result.REJECT
         if self.accept_inclusive:
-            if math.isclose(probability, self.accept_lowerbound):
+            if math.isclose(probability, self.accept_lowerbound, abs_tol=1e-9):
                 return RecognitionStrategy.Result.ACCEPT
 
         if probability < self.reject_upperbound:

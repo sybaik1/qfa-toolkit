@@ -9,3 +9,7 @@ dev:
 .PHONY: test
 test:
 	python -m unittest
+
+.PHONY: clean
+clean:
+	pip uninstall qfa_toolkit -y

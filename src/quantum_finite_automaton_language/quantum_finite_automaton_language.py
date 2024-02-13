@@ -4,10 +4,10 @@ from quantum_finite_automaton import QuantumFiniteAutomatonBase
 from recognition_strategy import RecognitionStrategy
 
 
-T = TypeVar('T', bound='QuantumFiniteAutomatonLanguageBase')
+T = TypeVar('T', bound='QuantumFiniteAutomatonLanguage')
 
 
-class QuantumFiniteAutomatonLanguageBase():
+class QuantumFiniteAutomatonLanguage():
     def __init__(
         self,
         qfa: QuantumFiniteAutomatonBase,

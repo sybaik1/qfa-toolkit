@@ -1,46 +1,29 @@
-import unittest
-
 import math
-import numpy as np
+import unittest
+from itertools import product
 
-import src.quantum_finite_automaton as qfa
+from .utils import get_measure_once_quantum_finite_automaton
+from .utils import get_measure_many_quantum_finite_automaton
 
-Mmqfa = qfa.MeasureManyQuantumFiniteAutomaton
 
+class TestQuantumFiniteAutomaton(unittest.TestCase):
+    def test_measure_once_quantum_finite_automaton(self):
+        for k, n in product(range(1, 8), range(8)):
+            moqfa = get_measure_once_quantum_finite_automaton(k)
+            with self.subTest(k=k, n=n):
+                w = [1] * n
+                theta = math.pi / k
+                target = math.cos(theta * n) ** 2
+                self.assertAlmostEqual(moqfa(w), target)
 
-class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
     def test_measure_many_quantum_finite_automaton(self):
-        # M(a^n) = (sin^2(theta))^n, theta = pi / 4
-
-        theta = math.pi / 4
-        a, b = (math.cos(theta), math.sin(theta))
-        acceptings = {2, }
-        rejectings = {1, }
-        transition = np.array([
-            [
-                [1, 0, 0],
-                [0, 1, 0],
-                [0, 0, 1],
-            ],
-            [
-                [a, b, 0],
-                [-b, a, 0],
-                [0, 0, 1],
-            ],
-            [
-                [0, 0, 1],
-                [0, 1, 0],
-                [1, 0, 0],
-            ],
-        ], dtype=np.cfloat)
-        m = Mmqfa(transition, acceptings, rejectings)
-        self.assertAlmostEqual(m([]), 1)
-        self.assertAlmostEqual(m([1]), 1/2)
-        self.assertAlmostEqual(m([1, 1]), 1/4)
-        self.assertAlmostEqual(m([1, 1, 1]), 1/8)
-        self.assertAlmostEqual(m([1, 1, 1, 1]), 1/16)
-        self.assertAlmostEqual(m([1, 1, 1, 1, 1]), 1/32)
-        self.assertAlmostEqual(m([1, 1, 1, 1, 1, 1]), 1/64)
+        for k, n in product(range(1, 8), range(8)):
+            mmqfa = get_measure_many_quantum_finite_automaton(k)
+            with self.subTest(k=k, n=n):
+                w = [1] * n
+                theta = math.pi / k
+                target = (math.cos(theta) ** 2) ** n
+                self.assertAlmostEqual(mmqfa(w), target)
 
 
 if __name__ == '__main__':
