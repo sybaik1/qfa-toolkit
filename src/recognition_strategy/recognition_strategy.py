@@ -1,12 +1,13 @@
 import enum
+import math
 
 
 class RecognitionStrategy:
 
-    class Result(enum.Enum):
-        ACCEPT = enum.auto
-        REJECT = enum.auto
-        INVALID = enum.auto
+    class Result(enum.IntEnum):
+        ACCEPT = enum.auto()
+        REJECT = enum.auto()
+        INVALID = enum.auto()
 
     def __init__(
         self,
@@ -15,6 +16,7 @@ class RecognitionStrategy:
         reject_inclusive: bool,
         accept_inclusive: bool,
     ) -> None:
+        # TODO: Deal with the floating point error
         if reject_upperbound < 0.0 or reject_upperbound > 1.0:
             raise ValueError("reject_upperbound must be between 0.0 and 1.0")
 
@@ -32,17 +34,30 @@ class RecognitionStrategy:
         self.reject_inclusive = reject_inclusive
         self.accept_inclusive = accept_inclusive
 
-    def __call__(self, probability: float) -> Result:
-        if probability < self.reject_upperbound:
-            return self.Result.REJECT
-        if self.reject_inclusive and probability == self.reject_upperbound:
-            return self.Result.REJECT
-        if self.accept_inclusive and probability == self.accept_lowerbound:
-            return self.Result.ACCEPT
-        if self.accept_lowerbound < probability:
-            return self.Result.ACCEPT
+    def __str__(self) -> str:
+        return "rej: {} {}, acc: {} {}".format(
+            '<=' if self.reject_inclusive else '<', self.reject_upperbound,
+            self.accept_lowerbound, '<=' if self.accept_inclusive else '<'
+        )
 
-        return self.Result.INVALID
+    def __call__(self, probability: float) -> Result:
+
+        if probability < 0.0 or probability > 1.0:
+            raise ValueError("probability must be between 0.0 and 1.0")
+
+        if self.reject_inclusive:
+            if math.isclose(probability, self.reject_upperbound):
+                return RecognitionStrategy.Result.REJECT
+        if self.accept_inclusive:
+            if math.isclose(probability, self.accept_lowerbound):
+                return RecognitionStrategy.Result.ACCEPT
+
+        if probability < self.reject_upperbound:
+            return RecognitionStrategy.Result.REJECT
+        if self.accept_lowerbound < probability:
+            return RecognitionStrategy.Result.ACCEPT
+
+        return RecognitionStrategy.Result.INVALID
 
 
 class CutPoint(RecognitionStrategy):
@@ -63,21 +78,21 @@ class IsolatedCutPoint(RecognitionStrategy):
     """
 
     def __init__(self, probability: float, epsilon: float) -> None:
-        if 0.0 < epsilon:
+        if epsilon < 0.0:
             raise ValueError("epsilon must be positive")
         super().__init__(
-            probability + epsilon, probability - epsilon, True, True)
+            probability - epsilon, probability + epsilon, True, True)
 
 
 class PositiveOneSidedBoundedError(RecognitionStrategy):
     def __init__(self, epsilon: float) -> None:
-        if epsilon < 1.0:
+        if epsilon > 1.0:
             raise ValueError("epsilon must be at most 1.0")
-        super().__init__(1.0 - epsilon, 0.0, False, True)
+        super().__init__(0.0, 1.0 - epsilon, True, False)
 
 
 class NegativeOneSidedBoundedError(RecognitionStrategy):
     def __init__(self, epsilon: float) -> None:
-        if epsilon < 1.0:
+        if epsilon > 1.0:
             raise ValueError("epsilon must be at most 1.0")
-        super().__init__(1.0, epsilon, True, False)
+        super().__init__(epsilon, 1.0, False, True)
