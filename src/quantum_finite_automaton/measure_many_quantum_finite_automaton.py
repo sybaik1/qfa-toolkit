@@ -1,14 +1,16 @@
-from __future__ import annotations
-
+from typing import (TypeVar, )
 import math
 
 import numpy as np
 import numpy.typing as npt
 
-from .quantum_finite_automaton_base import QuantumFiniteAutomatonBase
 from .quantum_finite_automaton_base import TotalState
+from .quantum_finite_automaton_base import Observable
+from .quantum_finite_automaton_base import QuantumFiniteAutomatonBase
 from .quantum_finite_automaton_base import (
     InvalidQauntumFiniteAutomatonException)
+
+T = TypeVar('T', bound='MeasureManyQuantumFiniteAutomaton')
 
 
 class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
@@ -40,7 +42,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         return set(range(self.states)) - self.halting_states
 
     @property
-    def observable(self) -> tuple[set[int], set[int], set[int]]:
+    def observable(self) -> Observable:
         return (
             self.accepting_states,
             self.rejecting_states,
@@ -65,52 +67,37 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             raise InvalidQauntumFiniteAutomatonException()
         return acceptance
 
-    def concatination(
-        self: MeasureManyQuantumFiniteAutomaton,
-        other: MeasureManyQuantumFiniteAutomaton
-    ) -> MeasureManyQuantumFiniteAutomaton:
+    def concatination(self, other: T) -> T:
         raise NotImplementedError()
 
-    def union(
-        self: MeasureManyQuantumFiniteAutomaton,
-        other: MeasureManyQuantumFiniteAutomaton
-    ) -> MeasureManyQuantumFiniteAutomaton:
+    def union(self, other: T) -> T:
         raise NotImplementedError()
 
-    def intersection(
-        self: MeasureManyQuantumFiniteAutomaton,
-        other: MeasureManyQuantumFiniteAutomaton
-    ) -> MeasureManyQuantumFiniteAutomaton:
+    def intersection(self, other: T) -> T:
         raise NotImplementedError()
 
-    def complement(
-        self: MeasureManyQuantumFiniteAutomaton
-    ) -> MeasureManyQuantumFiniteAutomaton:
+    def complement(self: T) -> T:
         raise NotImplementedError()
 
-    def difference(
-        self, other: MeasureManyQuantumFiniteAutomaton
-    ) -> MeasureManyQuantumFiniteAutomaton:
+    def difference(self, other: T) -> T:
         raise NotImplementedError()
 
-    def equivalence(self, other: MeasureManyQuantumFiniteAutomaton) -> bool:
+    def equivalence(self, other: T) -> bool:
         raise NotImplementedError()
 
-    def minimize(self) -> MeasureManyQuantumFiniteAutomaton:
+    def minimize(self: T) -> T:
         raise NotImplementedError()
 
-    def symmetric_difference(
-        self, other: MeasureManyQuantumFiniteAutomaton
-    ) -> MeasureManyQuantumFiniteAutomaton:
+    def symmetric_difference(self, other: T) -> T:
         raise NotImplementedError()
 
-    def kleene_star(self) -> MeasureManyQuantumFiniteAutomaton:
+    def kleene_star(self: T) -> T:
         raise NotImplementedError()
 
-    def kleene_plus(self) -> MeasureManyQuantumFiniteAutomaton:
+    def kleene_plus(self: T) -> T:
         raise NotImplementedError()
 
-    def reverse(self) -> MeasureManyQuantumFiniteAutomaton:
+    def reverse(self: T) -> T:
         raise NotImplementedError()
 
     def is_empty(self) -> bool:

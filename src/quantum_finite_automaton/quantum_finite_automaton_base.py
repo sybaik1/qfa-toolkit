@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import abc
 import math
 from typing import (TypeVar, Union, Generic, )
@@ -9,6 +7,7 @@ import numpy.typing as npt
 
 
 Superposition = npt.NDArray[np.cdouble]
+Observable = tuple[set[int], set[int], set[int]]
 
 
 class InvalidQauntumFiniteAutomatonException(Exception):
@@ -23,10 +22,7 @@ class TotalState():
         acceptance: float,
         rejection: float
     ) -> None:
-        if isinstance(superposition_or_list, list):
-            superposition = np.array(superposition_or_list, dtype=np.cdouble)
-        elif isinstance(superposition_or_list, np.ndarray):
-            superposition = superposition_or_list
+        superposition = np.array(superposition_or_list, dtype=np.cdouble)
         norm_square = np.linalg.norm(superposition) ** 2
         if not math.isclose(norm_square + acceptance + rejection, 1):
             raise ValueError(
@@ -41,15 +37,15 @@ class TotalState():
         self.rejection = rejection
 
     @classmethod
-    def initial(self, states: int) -> TotalState:
+    def initial(self, states: int) -> 'TotalState':
         superposition = np.zeros(states, dtype=np.cdouble)
         superposition[0] = 1
         return TotalState(superposition, 0, 0)
 
     def measure_by(
         self,
-        observable: tuple[set[int], set[int], set[int]]
-    ) -> TotalState:
+        observable: Observable,
+    ) -> 'TotalState':
         acceptings, rejectings, non_haltings = observable
 
         def projection(
@@ -73,12 +69,15 @@ class TotalState():
         superposition = projection(self.superposition, non_haltings)
         return TotalState(superposition, acceptance, rejection)
 
-    def apply(self, unitary: npt.NDArray[np.cdouble]) -> TotalState:
+    def apply(self, unitary: npt.NDArray[np.cdouble]) -> 'TotalState':
         superposition = unitary @ self.superposition
         return TotalState(superposition, self.acceptance, self.rejection)
 
     def to_tuple(self) -> tuple[Superposition, float, float]:
         return (self.superposition, self.acceptance, self.rejection)
+
+
+T = TypeVar('T', bound='QuantumFiniteAutomatonBase')
 
 
 class QuantumFiniteAutomatonBase(abc.ABC):
@@ -124,91 +123,74 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def concatination(
-        self: QuantumFiniteAutomatonType,
-        other: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
+    def concatination(self: T, other: T) -> T:
+        raise NotImplementedError()
+
+    def __concat__(self: T, other: T) -> T:
+        return self.concatination(other)
+
+    @abc.abstractmethod
+    def union(self: T, other: T) -> T:
+        raise NotImplementedError()
+
+    def __or__(self: T, other: T) -> T:
+        return self.union(other)
+
+    @abc.abstractmethod
+    def intersection(self: T, other: T) -> T:
+        raise NotImplementedError()
+
+    def __and__(self: T, other: T) -> T:
+        return self.intersection(other)
+
+    @abc.abstractmethod
+    def complement(self: T) -> T:
+        raise NotImplementedError()
+
+    def __not__(self: T) -> T:
+        return self.complement()
+
+    @abc.abstractmethod
+    def difference(self: T, other: T) -> T:
+        raise NotImplementedError()
+
+    def __sub__(self: T, other: T) -> T:
+        return self.difference(other)
+
+    @abc.abstractmethod
+    def equivalence(self: T, other: T) -> bool:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def union(
-        self: QuantumFiniteAutomatonType,
-        other: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
+    def minimize(self: T) -> T:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def intersection(
-        self: QuantumFiniteAutomatonType,
-        other: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
+    def symmetric_difference(self: T, other: T) -> T:
+        raise NotImplementedError()
+
+    def __xor__(self: T, other: T) -> T:
+        return self.symmetric_difference(other)
+
+    @abc.abstractmethod
+    def kleene_star(self: T) -> T:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def complement(
-        self: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
+    def kleene_plus(self: T) -> T:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def difference(
-        self: QuantumFiniteAutomatonType,
-        other: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
+    def reverse(self: T) -> T:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def equivalence(
-        self: QuantumFiniteAutomatonType,
-        other: QuantumFiniteAutomatonType
-    ) -> bool:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def minimize(
-        self: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def symmetric_difference(
-        self: QuantumFiniteAutomatonType, other: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def kleene_star(
-        self: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def kleene_plus(
-        self: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def reverse(
-        self: QuantumFiniteAutomatonType
-    ) -> QuantumFiniteAutomatonType:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def is_empty(self: QuantumFiniteAutomatonType) -> bool:
+    def is_empty(self: T) -> bool:
         raise NotImplementedError()
 
 
-QuantumFiniteAutomatonType = TypeVar(
-    'QuantumFiniteAutomatonType', bound=QuantumFiniteAutomatonBase)
-
-
-class DynamicConfiguration(Generic[QuantumFiniteAutomatonType]):
-    def __init__(
-        self,
-        qfa: QuantumFiniteAutomatonType,
-        q: TotalState
-    ) -> None:
+class DynamicConfiguration(Generic[T]):
+    def __init__(self, qfa: T, q: TotalState) -> None:
         pass
 
     def step(self, c: str) -> None:

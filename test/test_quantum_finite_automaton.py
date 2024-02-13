@@ -33,14 +33,14 @@ class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
                 [1, 0, 0],
             ],
         ], dtype=np.cfloat)
-        M = Mmqfa(transition, acceptings, rejectings)
-        self.assertAlmostEqual(M([]), 1)
-        self.assertAlmostEqual(M([1]), 1/2)
-        self.assertAlmostEqual(M([1, 1]), 1/4)
-        self.assertAlmostEqual(M([1, 1, 1]), 1/8)
-        self.assertAlmostEqual(M([1, 1, 1, 1]), 1/16)
-        self.assertAlmostEqual(M([1, 1, 1, 1, 1]), 1/32)
-        self.assertAlmostEqual(M([1, 1, 1, 1, 1, 1]), 1/64)
+        m = Mmqfa(transition, acceptings, rejectings)
+        self.assertAlmostEqual(m([]), 1)
+        self.assertAlmostEqual(m([1]), 1/2)
+        self.assertAlmostEqual(m([1, 1]), 1/4)
+        self.assertAlmostEqual(m([1, 1, 1]), 1/8)
+        self.assertAlmostEqual(m([1, 1, 1, 1]), 1/16)
+        self.assertAlmostEqual(m([1, 1, 1, 1, 1]), 1/32)
+        self.assertAlmostEqual(m([1, 1, 1, 1, 1, 1]), 1/64)
 
 
 if __name__ == '__main__':
