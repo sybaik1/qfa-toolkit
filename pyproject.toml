@@ -11,6 +11,7 @@ authors = [
 dependencies = [
   "numpy~=1.26.3"
 ]
+optional-dependencies.dev = [ "mypy~=1.8.0" ]
 version = "0.0.1"
 
 # mypy global options:
