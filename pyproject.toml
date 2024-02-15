@@ -19,4 +19,4 @@ version = "0.0.1"
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
-plugins = "numpy.typing.mypy_plugin"
+# plugins = "numpy.typing.mypy_plugin"

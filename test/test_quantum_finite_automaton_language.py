@@ -1,12 +1,12 @@
 import unittest
 
-from src.recognition_strategy import IsolatedCutPoint
-from src.recognition_strategy import NegativeOneSidedBoundedError
-from src.recognition_strategy import PositiveOneSidedBoundedError
+from qfa_toolkit.recognition_strategy import IsolatedCutPoint
+from qfa_toolkit.recognition_strategy import NegativeOneSidedBoundedError
+from qfa_toolkit.recognition_strategy import PositiveOneSidedBoundedError
 
 from .utils import get_measure_once_quantum_finite_automaton
 from .utils import get_measure_many_quantum_finite_automaton
-from src.quantum_finite_automaton_language import (
+from qfa_toolkit.quantum_finite_automaton_language import (
     QuantumFiniteAutomatonLanguage as QfaLanguage)
 
 

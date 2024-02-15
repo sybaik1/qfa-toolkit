@@ -9,6 +9,5 @@ https://is.muni.cz/th/dy49n/b-thesis-QFA.pdf
 # Test
 
 ```bash
-make dev
-make test
+make check
 ```

@@ -1,7 +1,7 @@
 from typing import (TypeVar, )
 
-from quantum_finite_automaton import QuantumFiniteAutomatonBase
-from recognition_strategy import RecognitionStrategy
+from ..quantum_finite_automaton import QuantumFiniteAutomatonBase
+from ..recognition_strategy import RecognitionStrategy
 
 
 T = TypeVar('T', bound='QuantumFiniteAutomatonLanguage')

@@ -2,9 +2,9 @@ import math
 
 import numpy as np
 
-from src.quantum_finite_automaton import (
+from qfa_toolkit.quantum_finite_automaton import (
     MeasureManyQuantumFiniteAutomaton as Mmqfa)
-from src.quantum_finite_automaton import (
+from qfa_toolkit.quantum_finite_automaton import (
     MeasureOnceQuantumFiniteAutomaton as Moqfa)
 
 

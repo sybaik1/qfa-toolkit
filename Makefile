@@ -1,33 +1,38 @@
 VENV := .venv
-PYTHON := $(VENV)/bin/python
-PIP := $(VENV)/bin/pip
-TARGET := $(VENV)/bin/
 
-.PHONY: default
-default:
+.DEFAULT:
 
 .PHONY: install
-install: $(VENV)
-	$(PIP) install .
+install:
+	pip install .
 
-.PHONY: dev
-dev: $(VENV)
-	$(PIP) install -e .
+$(VENV):
+	python3 -m venv $(VENV)
+	$(VENV)/bin/pip install --upgrade pip
+	$(VENV)/bin/pip install -e .
 
-.PHONY: test
-test: $(VENV)
-	$(PYTHON) -m unittest
-
-.PHONY: clean
-clean:
-	rm -rf $(VENV)
+.PHONY: check
+check: $(VENV)
+	$(VENV)/bin/python -m unittest
 
 .PHONY: vim
-vim: .git
-	vim $$(git ls-files)
+vim: .git $(VENV)
+	. $(VENV)/bin/activate; vim $$(git ls-files)
 
 .git:
 	git init
 
-$(VENV):
-	python3 -m venv $(VENV)
+
+.PHONY: clean clean-venv clean-build clean-pyc
+clean: clean-venv clean-build clean-pyc
+
+clean-venv:
+	rm -rf $(VENV)
+
+clean-build:
+	rm -rf build/
+	find . -name '*.egg-info' -exec rm -rf {} +
+
+clean-pyc:
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -rf {} +
