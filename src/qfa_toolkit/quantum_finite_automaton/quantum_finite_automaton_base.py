@@ -10,7 +10,11 @@ Superposition = npt.NDArray[np.cdouble]
 Observable = tuple[set[int], set[int], set[int]]
 
 
-class InvalidQauntumFiniteAutomatonException(Exception):
+class InvalidQuantumFiniteAutomatonError(Exception):
+    pass
+
+
+class NotClosedUnderOperationException(Exception):
     pass
 
 
@@ -77,7 +81,7 @@ class TotalState():
         return (self.superposition, self.acceptance, self.rejection)
 
 
-T = TypeVar('T', bound='QuantumFiniteAutomatonBase')
+QfaType = TypeVar('QfaType', bound='QuantumFiniteAutomatonBase')
 
 
 class QuantumFiniteAutomatonBase(abc.ABC):
@@ -115,7 +119,7 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         last_total_state = self.process(TotalState.initial(self.states), tape)
         _, acceptance, rejection = last_total_state.to_tuple()
         if not math.isclose(acceptance + rejection, 1):
-            raise InvalidQauntumFiniteAutomatonException()
+            raise InvalidQuantumFiniteAutomatonError()
         return acceptance
 
     @abc.abstractmethod
@@ -127,74 +131,93 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def concatenation(self: T, other: T) -> T:
+    def concatenation(self: QfaType, other: QfaType) -> QfaType:
         raise NotImplementedError()
 
-    def __concat__(self: T, other: T) -> T:
+    def __concat__(self: QfaType, other: QfaType) -> QfaType:
         return self.concatenation(other)
 
     @abc.abstractmethod
-    def union(self: T, other: T) -> T:
+    def union(self: QfaType, other: QfaType) -> QfaType:
         raise NotImplementedError()
 
-    def __or__(self: T, other: T) -> T:
+    def __or__(self: QfaType, other: QfaType) -> QfaType:
+        """Returns the union of the quantum finite automaton.
+
+        See union() for details.
+        """
         return self.union(other)
 
     @abc.abstractmethod
-    def intersection(self: T, other: T) -> T:
+    def intersection(self: QfaType, other: QfaType) -> QfaType:
         raise NotImplementedError()
 
-    def __and__(self: T, other: T) -> T:
+    def __and__(self: QfaType, other: QfaType) -> QfaType:
+        """Returns the intersection of the quantum finite automaton.
+
+        See intersection() for details.
+        """
+        return self.intersection(other)
+
+    def __multiply__(self: QfaType, other: QfaType) -> QfaType:
+        """Returns the intersection of the quantum finite automaton.
+
+        See intersection() for details.
+        """
         return self.intersection(other)
 
     @abc.abstractmethod
-    def complement(self: T) -> T:
+    def complement(self: QfaType) -> QfaType:
         raise NotImplementedError()
 
-    def __not__(self: T) -> T:
+    def __invert__(self: QfaType) -> QfaType:
+        """Returns the complement of the quantum finite automaton.
+
+        See complement() for details.
+        """
         return self.complement()
 
     @abc.abstractmethod
-    def difference(self: T, other: T) -> T:
+    def difference(self: QfaType, other: QfaType) -> QfaType:
         raise NotImplementedError()
 
-    def __sub__(self: T, other: T) -> T:
+    def __sub__(self: QfaType, other: QfaType) -> QfaType:
         return self.difference(other)
 
     @abc.abstractmethod
-    def equivalence(self: T, other: T) -> bool:
+    def equivalence(self: QfaType, other: QfaType) -> bool:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def minimize(self: T) -> T:
+    def minimize(self: QfaType) -> QfaType:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def symmetric_difference(self: T, other: T) -> T:
+    def symmetric_difference(self: QfaType, other: QfaType) -> QfaType:
         raise NotImplementedError()
 
-    def __xor__(self: T, other: T) -> T:
+    def __xor__(self: QfaType, other: QfaType) -> QfaType:
         return self.symmetric_difference(other)
 
     @abc.abstractmethod
-    def kleene_star(self: T) -> T:
+    def kleene_star(self: QfaType) -> QfaType:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def kleene_plus(self: T) -> T:
+    def kleene_plus(self: QfaType) -> QfaType:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def reverse(self: T) -> T:
+    def reverse(self: QfaType) -> QfaType:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def is_empty(self: T) -> bool:
+    def is_empty(self: QfaType) -> bool:
         raise NotImplementedError()
 
 
-class DynamicConfiguration(Generic[T]):
-    def __init__(self, qfa: T, q: TotalState) -> None:
+class DynamicConfiguration(Generic[QfaType]):
+    def __init__(self, qfa: QfaType, q: TotalState) -> None:
         pass
 
     def step(self, c: str) -> None:

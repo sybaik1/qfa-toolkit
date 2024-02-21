@@ -80,9 +80,12 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
         self.assertNotIn([1, 1, 1], lang_neg_one_sided)
 
         self.assertIn([], lang_invalid)
-        self.assertRaises(ValueError, lambda: [1] in lang_invalid)
-        self.assertRaises(ValueError, lambda: [1, 1] in lang_invalid)
-        self.assertRaises(ValueError, lambda: [1, 1, 1] in lang_invalid)
+        with self.assertRaises(ValueError):
+            [1] in lang_invalid
+        with self.assertRaises(ValueError):
+            [1, 1] in lang_invalid
+        with self.assertRaises(ValueError):
+            [1, 1, 1] in lang_invalid
 
 
 if __name__ == '__main__':
