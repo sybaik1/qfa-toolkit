@@ -98,14 +98,16 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             np.kron(u, v) for u, v
             in zip(self.transition, other.transition)
         ])
+        non_halting_states = set(
+            i * other.states + j for i, j
+            in product(self.non_halting_states, other.non_halting_states)
+        )
+        halting_states = set(range(states)) - non_halting_states
         accepting_states = set(
             i * other.states + j for i, j
             in product(self.accepting_states, other.accepting_states)
         )
-        rejecting_states = set(range(states)) - set(
-            i * other.states + j for i, j
-            in product(self.non_halting_states, other.non_halting_states)
-        ) - accepting_states
+        rejecting_states = halting_states - accepting_states
         return self.__class__(transition, accepting_states, rejecting_states)
 
     def complement(self: Mmqfa) -> Mmqfa:
