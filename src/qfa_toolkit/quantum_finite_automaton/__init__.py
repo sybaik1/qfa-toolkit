@@ -1,7 +1,8 @@
 from .quantum_finite_automaton_base import (
     QuantumFiniteAutomatonBase as QuantumFiniteAutomatonBase,
     NotClosedUnderOperationException as NotClosedUnderOperationException,
-    InvalidQuantumFiniteAutomatonError as InvalidQuantumFiniteAutomatonError
+    InvalidQuantumFiniteAutomatonError as InvalidQuantumFiniteAutomatonError,
+    TotalState as TotalState,
 )
 from .measure_once_quantum_finite_automaton import (
     MeasureOnceQuantumFiniteAutomaton as MeasureOnceQuantumFiniteAutomaton)

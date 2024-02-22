@@ -68,12 +68,12 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             np.kron(u, v) for u, v
             in zip(self.transition, other.transition)
         ])
-        accepting_state = set(
+        accepting_states = set(
             i * other.states + j for i, j
             in product(self.accepting_states, other.accepting_states)
         )
 
-        return self.__class__(transition, accepting_state)
+        return self.__class__(transition, accepting_states)
 
     def complement(self: Moqfa) -> Moqfa:
         """Returns the complement of the quantum finite automaton.

@@ -7,7 +7,7 @@ from qfa_toolkit.recognition_strategy import PositiveOneSidedBoundedError
 from .utils import get_measure_once_quantum_finite_automaton
 from .utils import get_measure_many_quantum_finite_automaton
 from qfa_toolkit.quantum_finite_automaton_language import (
-    QuantumFiniteAutomatonLanguage as QfaLanguage)
+    QuantumFiniteAutomatonLanguage as Qfl)
 
 
 class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
@@ -21,13 +21,13 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
         invalid_isolated_cut_point = IsolatedCutPoint(1/2, 1/8)
 
         # { a^{4p+q} }, q = 0, 1, 3
-        lang_isolated_cut_point = QfaLanguage(moqfa, isolated_cut_point)
+        lang_isolated_cut_point = Qfl(moqfa, isolated_cut_point)
         # { a^{4p+q} }, q = 0
-        lang_neg_one_sided = QfaLanguage(moqfa, neg_one_sided)
+        lang_neg_one_sided = Qfl(moqfa, neg_one_sided)
         # { a^{4p+q} }, q = 0, 1, 3
-        lang_pos_one_sided = QfaLanguage(moqfa, pos_one_sided)
+        lang_pos_one_sided = Qfl(moqfa, pos_one_sided)
         # Invalid for { a^{4p+q} }, q = 1, 3
-        lang_invalid = QfaLanguage(moqfa, invalid_isolated_cut_point)
+        lang_invalid = Qfl(moqfa, invalid_isolated_cut_point)
 
         self.assertIn([], lang_isolated_cut_point)
         self.assertIn([1], lang_isolated_cut_point)
@@ -55,19 +55,19 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
 
     def test_measure_many_quantum_finite_automaton_language(self):
         # M(a^n) = (1/2)^n
-        mmqfa = get_measure_many_quantum_finite_automaton(4)
+        mmqfa = get_measure_many_quantum_finite_automaton(1 / 2)
 
         isolated_cut_point = IsolatedCutPoint(3/16, 1/32)
         neg_one_sided = NegativeOneSidedBoundedError(3/4)
         invalid_neg_one_sided = NegativeOneSidedBoundedError(1/16)
 
         # { a^n }, n <= 2
-        lang_isolated_cut_point = QfaLanguage(mmqfa, isolated_cut_point)
+        lang_isolated_cut_point = Qfl(mmqfa, isolated_cut_point)
         # { a^n }, n <= 0
-        lang_neg_one_sided = QfaLanguage(mmqfa, neg_one_sided)
+        lang_neg_one_sided = Qfl(mmqfa, neg_one_sided)
         # Invalid for { a^n } 0 < n < 4,
         # since 1/16 < p < 1 for probabilities p.
-        lang_invalid = QfaLanguage(mmqfa, invalid_neg_one_sided)
+        lang_invalid = Qfl(mmqfa, invalid_neg_one_sided)
 
         self.assertIn([], lang_isolated_cut_point)
         self.assertIn([1], lang_isolated_cut_point)

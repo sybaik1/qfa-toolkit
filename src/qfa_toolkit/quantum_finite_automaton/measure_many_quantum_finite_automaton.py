@@ -1,4 +1,5 @@
 from functools import reduce
+from itertools import product
 
 import numpy as np
 import numpy.typing as npt
@@ -56,6 +57,8 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         return total_state
 
     def concatenation(self, other: Mmqfa) -> Mmqfa:
+        if self.alphabet != other.alphabet:
+            raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
 
     def union(self, other: Mmqfa) -> Mmqfa:
@@ -66,7 +69,13 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         Raises: NotClosedUnderOperationError
         """
-        raise NotClosedUnderOperationException()
+        if self.alphabet != other.alphabet:
+            raise ValueError("Alphabets must be the same")
+
+        if not self.is_co_end_decisive() or not other.is_co_end_decisive():
+            raise NotClosedUnderOperationException()
+
+        return ~((~self) & (~other))
 
     def intersection(self, other: Mmqfa) -> Mmqfa:
         """ Returns the intersection of two MMQFA.
@@ -79,8 +88,25 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         Raises: NotClosedUnderOperationError
         """
-        # TODO: Implement the intersection of MMQFA for special cases
-        raise NotClosedUnderOperationException()
+        if self.alphabet != other.alphabet:
+            raise ValueError("Alphabets must be the same")
+
+        if not self.is_end_decisive() or not other.is_end_decisive():
+            raise NotClosedUnderOperationException()
+        states = self.states * other.states
+        transition = np.stack([
+            np.kron(u, v) for u, v
+            in zip(self.transition, other.transition)
+        ])
+        accepting_states = set(
+            i * other.states + j for i, j
+            in product(self.accepting_states, other.accepting_states)
+        )
+        rejecting_states = set(range(states)) - set(
+            i * other.states + j for i, j
+            in product(self.non_halting_states, other.non_halting_states)
+        ) - accepting_states
+        return self.__class__(transition, accepting_states, rejecting_states)
 
     def complement(self: Mmqfa) -> Mmqfa:
         """Returns the complement of the quantum finite automaton.
@@ -106,6 +132,8 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         Computing: 1-Way Quantum Automata. In Proceedings of the 8th
         International Conference on Developments in Language Theory (DLT'04).
         """
+        if self.alphabet != other.alphabet:
+            raise ValueError("Alphabets must be the same")
         if not 0 <= c and c <= 1:
             raise ValueError("c must be in [0, 1]")
 
@@ -145,15 +173,21 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         return self.__class__(transition, accepting_states, rejecting_states)
 
     def difference(self, other: Mmqfa) -> Mmqfa:
+        if self.alphabet != other.alphabet:
+            raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
 
     def equivalence(self, other: Mmqfa) -> bool:
+        if self.alphabet != other.alphabet:
+            raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
 
     def minimize(self: Mmqfa) -> Mmqfa:
         raise NotImplementedError()
 
     def symmetric_difference(self, other: Mmqfa) -> Mmqfa:
+        if self.alphabet != other.alphabet:
+            raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
 
     def kleene_star(self: Mmqfa) -> Mmqfa:
@@ -167,3 +201,31 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
     def is_empty(self) -> bool:
         raise NotImplementedError()
+
+    def is_end_decisive(self) -> bool:
+        """Returns whether the quantum finite automaton is end-decisive.
+
+        A quantum finite automaton is end-decisive if it accepts only after
+        read end-of-string.
+
+        Alex Brodsky and Nicholas Pippenger. 2002. Characterizations of 1-way
+        Quantum Finite Automata. SIAM Jornal on Computing.
+        """
+        adjacency = sum(
+            abs(self.transition[:-1]) + np.eye(self.states)).astype(bool)
+        connected = np.linalg.matrix_power(adjacency, self.states)
+        return all(not connected[0][state] for state in self.accepting_states)
+
+    def is_co_end_decisive(self) -> bool:
+        """Returns whether the quantum finite automaton is co-end-decisive.
+
+        A quantum finite automaton is end-decisive if it rejects only after
+        read end-of-string.
+
+        Alex Brodsky and Nicholas Pippenger. 2002. Characterizations of 1-way
+        Quantum Finite Automata. SIAM Jornal on Computing.
+        """
+        adjacency = sum(
+            abs(self.transition[:-1]) + np.eye(self.states)).astype(bool)
+        connected = np.linalg.matrix_power(adjacency, self.states)
+        return all(not connected[0][state] for state in self.rejecting_states)

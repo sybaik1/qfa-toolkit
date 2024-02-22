@@ -33,13 +33,12 @@ def get_measure_once_quantum_finite_automaton(k: int) -> Moqfa:
     return Moqfa(transition, acceptings)
 
 
-def get_measure_many_quantum_finite_automaton(k: int) -> Mmqfa:
+def get_measure_many_quantum_finite_automaton(r: float) -> Mmqfa:
     """
-    M_k(a^n) = (cos^2(theta))^n, theta = pi / k
+    M_k(a^n) = r^n
+    M_k is end-decisive
     """
-
-    theta = math.pi / k
-    a, b = (math.cos(theta), math.sin(theta))
+    a, b = (math.sqrt(r), math.sqrt(1-r))
     acceptings = {2}
     rejectings = {1}
     transition = np.array([

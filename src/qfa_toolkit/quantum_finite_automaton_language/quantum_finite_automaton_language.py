@@ -1,10 +1,8 @@
-from typing import (TypeVar, )
-
 from ..quantum_finite_automaton import QuantumFiniteAutomatonBase
 from ..recognition_strategy import RecognitionStrategy
 
 
-T = TypeVar('T', bound='QuantumFiniteAutomatonLanguage')
+Qfl = 'QuantumFiniteAutomatonLanguage'
 
 
 class QuantumFiniteAutomatonLanguage():
@@ -34,32 +32,32 @@ class QuantumFiniteAutomatonLanguage():
             raise ValueError("Invalid result from recognition strategy")
         return result == RecognitionStrategy.Result.ACCEPT
 
-    def concatination(self: T, other: T) -> T:
+    def concatination(self: Qfl, other: Qfl) -> Qfl:
         raise NotImplementedError()
 
-    def union(self: T, other: T) -> T:
+    def union(self: Qfl, other: Qfl) -> Qfl:
         raise NotImplementedError()
 
-    def intersection(self: T, other: T) -> T:
+    def intersection(self: Qfl, other: Qfl) -> Qfl:
         raise NotImplementedError()
 
-    def complement(self: T) -> T:
+    def complement(self: Qfl) -> Qfl:
         raise NotImplementedError()
 
-    def difference(self: T, other: T) -> T:
+    def difference(self: Qfl, other: Qfl) -> Qfl:
         raise NotImplementedError()
 
-    def equivalence(self: T, other: T) -> bool:
+    def equivalence(self: Qfl, other: Qfl) -> bool:
         raise NotImplementedError()
 
-    def kleene_star(self: T) -> T:
+    def kleene_star(self: Qfl) -> Qfl:
         raise NotImplementedError()
 
-    def kleene_plus(self: T) -> T:
+    def kleene_plus(self: Qfl) -> Qfl:
         raise NotImplementedError()
 
-    def reverse(self: T) -> T:
+    def reverse(self: Qfl) -> Qfl:
         raise NotImplementedError()
 
-    def is_empty(self: T) -> bool:
+    def is_empty(self: Qfl) -> bool:
         raise NotImplementedError()
