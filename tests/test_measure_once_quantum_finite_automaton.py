@@ -1,5 +1,6 @@
 import math
 import unittest
+from functools import reduce
 from itertools import product
 
 from .utils import get_measure_once_quantum_finite_automaton
@@ -58,6 +59,33 @@ class TestMeasureOnceQuantumFiniteAutomaton(unittest.TestCase):
                     w = [1] * n
                     target = c * m1(w) + (1 - c) * m2(w)
                     self.assertAlmostEqual(combination(w), target)
+
+    def test_word_quotient(self):
+        for k in range(1, 8):
+            moqfa = get_measure_once_quantum_finite_automaton(k)
+            for m in range(8):
+                u = [1] * m
+                quotient = moqfa.word_quotient(u)
+                with self.subTest(k=k, m=m):
+                    for n in range(8):
+                        w = [1] * n
+                        target = moqfa(u + w)
+                        self.assertAlmostEqual(quotient(w), target)
+
+    def test_inverse_homomorphism(self):
+        for k in range(1, 8):
+            moqfa = get_measure_once_quantum_finite_automaton(k)
+            for m in range(8):
+                u = [1] * m
+                phi = [[0], u]
+                inverse_homomorphism = moqfa.inverse_homomorphism(phi)
+                with self.subTest(k=k, m=m):
+                    for n in range(8):
+                        w = [1] * n
+                        # phi: w |-> phi(w) = v
+                        v = reduce(lambda v, c: v + phi[c], w, [])
+                        target = moqfa(v)
+                        self.assertAlmostEqual(inverse_homomorphism(w), target)
 
 
 if __name__ == '__main__':

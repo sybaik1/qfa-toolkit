@@ -55,7 +55,7 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
 
     def test_measure_many_quantum_finite_automaton_language(self):
         # M(a^n) = (1/2)^n
-        mmqfa = get_measure_many_quantum_finite_automaton(1 / 2)
+        mmqfa = get_measure_many_quantum_finite_automaton(1/2)
 
         isolated_cut_point = IsolatedCutPoint(3/16, 1/32)
         neg_one_sided = NegativeOneSidedBoundedError(3/4)

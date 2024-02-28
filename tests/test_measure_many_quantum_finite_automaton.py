@@ -86,10 +86,10 @@ class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
     def test_end_decisive(self):
         r = 1 / 4
         m = get_measure_many_quantum_finite_automaton(r)
-        total_state = TotalState.initial(m.states).apply(m.transition[0])
+        total_state = TotalState.initial(m.states).apply(m.transitions[0])
         self.assertAlmostEqual(total_state.acceptance, 0)
         for _ in range(8):
-            total_state = TotalState.initial(m.states).apply(m.transition[1])
+            total_state = TotalState.initial(m.states).apply(m.transitions[1])
             self.assertAlmostEqual(total_state.acceptance, 0)
         self.assertTrue(m.is_end_decisive())
         self.assertFalse((~m).is_end_decisive())
@@ -97,10 +97,10 @@ class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
     def test_co_end_decisive(self):
         r = 1 / 4
         m = ~get_measure_many_quantum_finite_automaton(r)
-        total_state = TotalState.initial(m.states).apply(m.transition[0])
+        total_state = TotalState.initial(m.states).apply(m.transitions[0])
         self.assertAlmostEqual(total_state.rejection, 0)
         for _ in range(8):
-            total_state = TotalState.initial(m.states).apply(m.transition[1])
+            total_state = TotalState.initial(m.states).apply(m.transitions[1])
             self.assertAlmostEqual(total_state.rejection, 0)
         self.assertTrue(m.is_co_end_decisive())
         self.assertFalse((~m).is_co_end_decisive())

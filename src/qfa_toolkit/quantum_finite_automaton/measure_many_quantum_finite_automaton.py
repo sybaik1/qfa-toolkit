@@ -52,7 +52,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         return reduce(self.step, w, total_state)
 
     def step(self, total_state: TotalState, c: int) -> TotalState:
-        total_state = total_state.apply(self.transition[c])
+        total_state = total_state.apply(self.transitions[c])
         total_state = total_state.measure_by(self.observable)
         return total_state
 
@@ -96,7 +96,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         states = self.states * other.states
         transition = np.stack([
             np.kron(u, v) for u, v
-            in zip(self.transition, other.transition)
+            in zip(self.transitions, other.transitions)
         ])
         non_halting_states = set(
             i * other.states + j for i, j
@@ -121,7 +121,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         International Conference on Developments in Language Theory (DLT'04).
         """
         return self.__class__(
-            self.transition, self.rejecting_states, self.accepting_states)
+            self.transitions, self.rejecting_states, self.accepting_states)
 
     def linear_combination(self, other: Mmqfa, c: float) -> Mmqfa:
         """Returns the linear combination of two MMQFA.
@@ -161,7 +161,8 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         initial_transition[self.states][0] = -f
         initial_transition[self.states][self.states] = d
         transition = np.stack([
-            direct_sum(u, v) for u, v in zip(self.transition, other.transition)
+            direct_sum(u, v)
+            for u, v in zip(self.transitions, other.transitions)
         ])
         transition[0] = transition[0] @ initial_transition
         accepting_states = (
@@ -173,6 +174,9 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             | set(state + self.states for state in other.rejecting_states)
         )
         return self.__class__(transition, accepting_states, rejecting_states)
+
+    def word_quotient(self, w: list[int]) -> Mmqfa:
+        raise NotImplementedError()
 
     def difference(self, other: Mmqfa) -> Mmqfa:
         if self.alphabet != other.alphabet:
@@ -214,7 +218,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         Quantum Finite Automata. SIAM Jornal on Computing.
         """
         adjacency = sum(
-            abs(self.transition[:-1]) + np.eye(self.states)).astype(bool)
+            abs(self.transitions[:-1]) + np.eye(self.states)).astype(bool)
         connected = np.linalg.matrix_power(adjacency, self.states)
         return all(not connected[0][state] for state in self.accepting_states)
 
@@ -228,6 +232,6 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         Quantum Finite Automata. SIAM Jornal on Computing.
         """
         adjacency = sum(
-            abs(self.transition[:-1]) + np.eye(self.states)).astype(bool)
+            abs(self.transitions[:-1]) + np.eye(self.states)).astype(bool)
         connected = np.linalg.matrix_power(adjacency, self.states)
         return all(not connected[0][state] for state in self.rejecting_states)

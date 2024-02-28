@@ -87,28 +87,28 @@ QfaType = TypeVar('QfaType', bound='QuantumFiniteAutomatonBase')
 class QuantumFiniteAutomatonBase(abc.ABC):
     start_of_string: int = 0
 
-    def __init__(self, transition: Superposition) -> None:
-        if len(transition.shape) != 3:
+    def __init__(self, transitions: npt.NDArray[np.cdouble]) -> None:
+        if len(transitions.shape) != 3:
             raise ValueError("Transition matrix must be 3-dimensional")
-        if transition.shape[0] < 3:
+        if transitions.shape[0] < 3:
             raise ValueError("Transition matrix must have at least 3 rows")
-        if transition.shape[1] != transition.shape[2]:
+        if transitions.shape[1] != transitions.shape[2]:
             raise ValueError(
                 "Each component of transition matrix must be square")
-        identity = np.eye(transition.shape[1])
-        for u in transition:
+        identity = np.eye(transitions.shape[1])
+        for u in transitions:
             if not np.allclose(identity, u.dot(u.T.conj())):
                 raise ValueError(
                     "Each component of transition matrix must be unitary")
-        self.transition = transition
+        self.transitions = transitions
 
     @property
     def alphabet(self) -> int:
-        return self.transition.shape[0] - 2
+        return self.transitions.shape[0] - 2
 
     @property
     def states(self) -> int:
-        return self.transition.shape[1]
+        return self.transitions.shape[1]
 
     @property
     def end_of_string(self) -> int:
