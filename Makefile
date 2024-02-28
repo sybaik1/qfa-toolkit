@@ -6,7 +6,7 @@ VENV := .venv
 install:
 	pip install .
 
-$(VENV):
+$(VENV): pyproject.toml
 	python3 -m venv $(VENV)
 	$(VENV)/bin/pip install --upgrade pip
 	$(VENV)/bin/pip install -e .[dev]
