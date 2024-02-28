@@ -1,8 +1,29 @@
+import itertools
+from typing import (Iterator, )
+
 from ..quantum_finite_automaton import QuantumFiniteAutomatonBase
 from ..recognition_strategy import RecognitionStrategy
 
 
 Qfl = 'QuantumFiniteAutomatonLanguage'
+
+
+def _iterate_length_n_strings(alphabet: int, n: int) -> Iterator[list[int]]:
+    return map(list, itertools.product(range(1, alphabet+1), repeat=n))
+
+
+def _iterate_length_less_than_n_strings(
+    alphabet: int, n: int
+) -> Iterator[list[int]]:
+    count = range(n)
+    iterables = map(lambda n: _iterate_length_n_strings(alphabet, n), count)
+    return itertools.chain.from_iterable(iterables)
+
+
+def _iterate_every_string(alphabet: int) -> Iterator[list[int]]:
+    count = itertools.count()
+    iterables = map(lambda n: _iterate_length_n_strings(alphabet, n), count)
+    return itertools.chain.from_iterable(iterables)
 
 
 class QuantumFiniteAutomatonLanguage():
@@ -32,6 +53,19 @@ class QuantumFiniteAutomatonLanguage():
             raise ValueError("Invalid result from recognition strategy")
         return result == RecognitionStrategy.Result.ACCEPT
 
+    def enumerate_length_less_than_n(self, n: int) -> Iterator[list[int]]:
+        length_less_than_n_strings = (
+            _iterate_length_less_than_n_strings(self.alphabet, n))
+        return filter(lambda w: w in self, length_less_than_n_strings)
+
+    def enumerate_length_n(self, n: int) -> Iterator[list[int]]:
+        length_n_string = _iterate_length_n_strings(self.alphabet, n)
+        return filter(lambda w: w in self, length_n_string)
+
+    def enumerate(self) -> Iterator[list[int]]:
+        every_string = _iterate_every_string(self.alphabet)
+        return filter(lambda w: w in self, every_string)
+
     def concatination(self: Qfl, other: Qfl) -> Qfl:
         raise NotImplementedError()
 
@@ -40,6 +74,9 @@ class QuantumFiniteAutomatonLanguage():
 
     def intersection(self: Qfl, other: Qfl) -> Qfl:
         raise NotImplementedError()
+
+    def __invert__(self: Qfl) -> Qfl:
+        return self.complement()
 
     def complement(self: Qfl) -> Qfl:
         raise NotImplementedError()
@@ -51,9 +88,6 @@ class QuantumFiniteAutomatonLanguage():
         raise NotImplementedError()
 
     def kleene_star(self: Qfl) -> Qfl:
-        raise NotImplementedError()
-
-    def kleene_plus(self: Qfl) -> Qfl:
         raise NotImplementedError()
 
     def reverse(self: Qfl) -> Qfl:

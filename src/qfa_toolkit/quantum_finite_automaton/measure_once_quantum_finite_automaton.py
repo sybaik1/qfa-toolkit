@@ -136,8 +136,8 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             direct_sum(u, v)
             for u, v in zip(self.transitions, other.transitions)
         ])
-        transitions[self.__class__.start_of_string] = (
-            transitions[self.__class__.start_of_string] @ initial_transition)
+        transitions[self.start_of_string] = (
+            transitions[self.start_of_string] @ initial_transition)
         accepting_states = (
             self.accepting_states
             | set(state + self.states for state in other.accepting_states)
@@ -196,6 +196,14 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         raise NotImplementedError()
 
     def equivalence(self, other: Moqfa) -> bool:
+        """Returns whether the measure-many quantum finite automaton is equal.
+
+        For quantum finite automata M and M', the equivalence is defined as
+        whether M(w) = M'(w) for all w.
+
+        Alex Brodsky, and Nicholas Pippenger. 2002. Characterazations of 1-Way
+        Quantum Finite Automata. SIAM Jornal on Computing 31.5.
+        """
         raise NotImplementedError()
 
     def minimize(self: Moqfa) -> Moqfa:

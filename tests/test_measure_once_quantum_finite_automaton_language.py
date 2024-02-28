@@ -5,12 +5,11 @@ from qfa_toolkit.recognition_strategy import NegativeOneSidedBoundedError
 from qfa_toolkit.recognition_strategy import PositiveOneSidedBoundedError
 
 from .utils import get_measure_once_quantum_finite_automaton
-from .utils import get_measure_many_quantum_finite_automaton
 from qfa_toolkit.quantum_finite_automaton_language import (
     QuantumFiniteAutomatonLanguage as Qfl)
 
 
-class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
+class TestMeasureOnceuantumFiniteAutomatonLanguage(unittest.TestCase):
     def test_measure_once_quantum_finite_automaton_language(self):
         # M(a^{4p+q}) is 1 if q = 0; 1/2 if q = 1, 3; 0 if q = 2
         moqfa = get_measure_once_quantum_finite_automaton(4)
@@ -52,40 +51,6 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
         self.assertNotIn([1, 1], lang_invalid)
         self.assertRaises(ValueError, lambda: [1, 1, 1] in lang_invalid)
         self.assertIn([1, 1, 1, 1], lang_invalid)
-
-    def test_measure_many_quantum_finite_automaton_language(self):
-        # M(a^n) = (1/2)^n
-        mmqfa = get_measure_many_quantum_finite_automaton(1/2)
-
-        isolated_cut_point = IsolatedCutPoint(3/16, 1/32)
-        neg_one_sided = NegativeOneSidedBoundedError(3/4)
-        invalid_neg_one_sided = NegativeOneSidedBoundedError(1/16)
-
-        # { a^n }, n <= 2
-        lang_isolated_cut_point = Qfl(mmqfa, isolated_cut_point)
-        # { a^n }, n <= 0
-        lang_neg_one_sided = Qfl(mmqfa, neg_one_sided)
-        # Invalid for { a^n } 0 < n < 4,
-        # since 1/16 < p < 1 for probabilities p.
-        lang_invalid = Qfl(mmqfa, invalid_neg_one_sided)
-
-        self.assertIn([], lang_isolated_cut_point)
-        self.assertIn([1], lang_isolated_cut_point)
-        self.assertIn([1, 1], lang_isolated_cut_point)
-        self.assertNotIn([1, 1, 1], lang_isolated_cut_point)
-
-        self.assertIn([], lang_neg_one_sided)
-        self.assertNotIn([1], lang_neg_one_sided)
-        self.assertNotIn([1, 1], lang_neg_one_sided)
-        self.assertNotIn([1, 1, 1], lang_neg_one_sided)
-
-        self.assertIn([], lang_invalid)
-        with self.assertRaises(ValueError):
-            [1] in lang_invalid
-        with self.assertRaises(ValueError):
-            [1, 1] in lang_invalid
-        with self.assertRaises(ValueError):
-            [1, 1, 1] in lang_invalid
 
 
 if __name__ == '__main__':
