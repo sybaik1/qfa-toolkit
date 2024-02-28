@@ -9,7 +9,10 @@ authors = [
   {name = "Sungmin Kim", email = "rena_rio@yonsei.ac.kr"},
 ]
 dependencies = [
-  "numpy~=1.26.3"
+  "numpy~=1.26.3",
+  "scipy~=1.12.0",
+  "qiskit~=1.0.0",
+  "qiskit-ibm-runtime~=0.20.0"
 ]
 optional-dependencies.dev = [ "mypy~=1.8.0" ]
 version = "0.0.1"
