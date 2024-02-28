@@ -1,8 +1,8 @@
 import unittest
-import sys
 
+from qiskit.providers.basic_provider import BasicSimulator
 from scipy.stats import chisquare  # type: ignore
-from qiskit_ibm_runtime import QiskitRuntimeService, Sampler  # type: ignore
+# from qiskit_ibm_runtime import QiskitRuntimeService, Sampler  # type: ignore
 
 import qfa_toolkit.qiskit_converter as qc
 import qfa_toolkit.recognition_strategy as rs
@@ -11,17 +11,13 @@ from .utils import get_measure_many_quantum_finite_automaton
 
 Result = rs.RecognitionStrategy.Result
 
-# QiskitRuntimeService.save_account(
-#         channel='ibm_quantum',
-#         token='<IBM_TOKEN>')
-
-service = QiskitRuntimeService()
-
 
 class TestQiskitCircuit(unittest.TestCase):
 
-    def test_qiskit_circuit(self):
-        backend = service.backend('ibmq_qasm_simulator')
+    def setUp(self):
+        self.simulator = BasicSimulator()
+
+    def test_qiskit_measure_many_quantum_finite_automaton_circuit(self):
         shots = 10000
 
         for k in range(1, 4):
@@ -32,26 +28,36 @@ class TestQiskitCircuit(unittest.TestCase):
             for n in range(5):
                 w = [1] * n
                 circuit = qc_mmqfa.get_circuit_for_string(w)
-                job = Sampler(backend).run(circuit, shots=shots)
+                job = self.simulator.run(circuit, shots=shots)
                 result = job.result()
-                accept, reject = 0, 0
-                for key in result.quasi_dists[0].keys():
-                    if key in qc_mmqfa.accepting_states:
-                        accept += result.quasi_dists[0][key]
-                    elif key in qc_mmqfa.rejecting_states:
-                        reject += result.quasi_dists[0][key]
-                    else:
-                        print(f'Error key: {key}', file=sys.stderr)
-                expected_acceptance = mmqfa(w) * shots
-                if expected_acceptance == shots:
-                    self.assertEqual(accept, 1.0)
-                elif expected_acceptance == 0:
-                    self.assertEqual(reject, 1.0)
-                else:
-                    chi_value = chisquare(
-                        [accept*shots, reject*shots],
-                        [expected_acceptance, shots - expected_acceptance])
-                    self.assertGreater(chi_value.pvalue, 0.05)
+                counts = {
+                    int(k, base=2): v
+                    for k, v in result.get_counts().items()
+                }
+
+                observed_rejection = sum(
+                    counts[state] for state in counts
+                    if state in qc_mmqfa.rejecting_states
+                )
+                observed_acceptance = sum(
+                    counts[state] for state in counts
+                    if state in qc_mmqfa.accepting_states
+                )
+                observed = [observed_rejection, observed_acceptance]
+
+                expected_acceptance = int(mmqfa(w) * shots)
+                expected_rejection = shots - expected_acceptance
+                expected = [expected_rejection, expected_acceptance]
+
+                if expected_acceptance == 0:
+                    self.assertEqual(expected_acceptance, observed_acceptance)
+                    return
+                if expected_rejection == 0:
+                    self.assertEqual(expected_rejection, observed_rejection)
+                    return
+
+                chi_value = chisquare(observed, expected)
+                self.assertGreater(chi_value.pvalue, 0.05)
 
 
 if __name__ == '__main__':

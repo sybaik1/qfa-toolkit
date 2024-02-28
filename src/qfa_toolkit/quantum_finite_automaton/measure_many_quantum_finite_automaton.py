@@ -151,20 +151,22 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             w = np.concatenate((w1, w2), axis=0)
             return w
 
+        states = self.states + other.states
         f = np.sqrt(1 - c)
         d = np.sqrt(c)
 
-        states = self.states + other.states
         initial_transition = np.eye(states)
         initial_transition[0][0] = d
         initial_transition[0][self.states] = f
         initial_transition[self.states][0] = -f
         initial_transition[self.states][self.states] = d
+
         transition = np.stack([
             direct_sum(u, v)
             for u, v in zip(self.transitions, other.transitions)
         ])
-        transition[0] = transition[0] @ initial_transition
+        transition[self.start_of_string] = (
+            transition[self.start_of_string] @ initial_transition)
         accepting_states = (
             self.accepting_states
             | set(state + self.states for state in other.accepting_states)

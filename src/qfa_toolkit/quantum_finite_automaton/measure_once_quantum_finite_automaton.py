@@ -123,9 +123,10 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             return w
 
         states = self.states + other.states
-        initial_transition = np.eye(states)
         f = np.sqrt(1 - c)
         d = np.sqrt(c)
+
+        initial_transition = np.eye(states)
         initial_transition[0][0] = d
         initial_transition[0][self.states] = f
         initial_transition[self.states][0] = -f
@@ -135,7 +136,8 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             direct_sum(u, v)
             for u, v in zip(self.transitions, other.transitions)
         ])
-        transitions[0] = transitions[0] @ initial_transition
+        transitions[self.__class__.start_of_string] = (
+            transitions[self.__class__.start_of_string] @ initial_transition)
         accepting_states = (
             self.accepting_states
             | set(state + self.states for state in other.accepting_states)
@@ -172,8 +174,10 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
         Quantum Grammars. Theoretical Computer Science (TCS'00).
         """
-        if len(phi) == 0 or len(phi[0]) != 1 or phi[0][0] != 0:
-            raise ValueError("phi[0] must be [0]")
+        if len(phi) == 0:
+            raise ValueError("phi must be non-empty")
+        if phi[self.start_of_string] != [self.start_of_string]:
+            raise ValueError("phi[start_of_string] must be [start_of_string]")
 
         alphabet = len(phi) - 1
         image = max(map(lambda v: max(v, default=0), phi))
