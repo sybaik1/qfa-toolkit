@@ -1,91 +1,85 @@
 import math
+import functools
 import unittest
-from functools import reduce
-from itertools import product
 
-from .utils import get_measure_once_quantum_finite_automaton
+from qfa_toolkit.quantum_finite_automaton import (
+    MeasureOnceQuantumFiniteAutomaton as Moqfa)
+
+from .utils import get_arbitrary_moqfa
+from .utils import test_qfa
+from .utils import test_unary_operation
+from .utils import test_binary_operation
 
 
 class TestMeasureOnceQuantumFiniteAutomaton(unittest.TestCase):
+
+    def setUp(self):
+        self.get_moqfa = get_arbitrary_moqfa
+        self.qfa_parameters = list(range(1, 8))
+        self.max_string_len = 8
+
     def test_apply(self):
-        for k in range(1, 8):
-            with self.subTest(k=k):
-                moqfa = get_measure_once_quantum_finite_automaton(k)
-                for n in range(8):
-                    w = [1] * n
-                    theta = math.pi / k
-                    target = math.cos(theta * n) ** 2
-                    self.assertAlmostEqual(moqfa(w), target)
+        test_qfa(
+            self, self.get_moqfa,
+            lambda k, w: math.cos(math.pi / k * len(w)) ** 2,
+            self.qfa_parameters, self.max_string_len
+        )
 
     def test_complement(self):
-        for k in range(1, 8):
-            with self.subTest(k=k):
-                moqfa = get_measure_once_quantum_finite_automaton(k)
-                complement = ~moqfa
-                for n in range(8):
-                    w = [1] * n
-                    self.assertAlmostEqual(complement(w), 1-moqfa(w))
+        test_unary_operation(
+            self, Moqfa.__invert__, lambda x: 1-x,
+            self.get_moqfa, self.qfa_parameters, self.max_string_len
+        )
 
     def test_intersection(self):
-        for k, l in product(range(1, 4), repeat=2):
-            m1 = get_measure_once_quantum_finite_automaton(k)
-            m2 = get_measure_once_quantum_finite_automaton(l)
-            intersection = m1 & m2
-            with self.subTest(k=k, l=l):
-                for n in range(8):
-                    w = [1] * n
-                    target = m1(w) * m2(w)
-                    self.assertAlmostEqual(intersection(w), target)
+        test_binary_operation(
+            self, Moqfa.__and__, lambda x, y: x*y,
+            self.get_moqfa, self.get_moqfa,
+            self.qfa_parameters, self.qfa_parameters, self.max_string_len
+        )
 
     def test_union(self):
-        for k, l in product(range(1, 4), repeat=2):
-            m1 = get_measure_once_quantum_finite_automaton(k)
-            m2 = get_measure_once_quantum_finite_automaton(l)
-            union = m1 | m2
-            with self.subTest(k=k, l=l):
-                for n in range(8):
-                    w = [1] * n
-                    target = (1 - m1(w)) * (1 - m2(w))
-                    self.assertAlmostEqual(1 - union(w), target)
+        test_binary_operation(
+            self, Moqfa.__or__, lambda x, y: 1 - (1-x)*(1-y),
+            self.get_moqfa, self.get_moqfa,
+            self.qfa_parameters, self.qfa_parameters, self.max_string_len
+        )
 
     def test_linear_combination(self):
-        for k, l, i in product(range(1, 4), range(1, 4), range(4)):
-            m1 = get_measure_once_quantum_finite_automaton(k)
-            m2 = get_measure_once_quantum_finite_automaton(l)
-            c = i / 4
-            combination = m1.linear_combination(m2, c)
-            with self.subTest(k=k, l=l):
-                for n in range(8):
-                    w = [1] * n
-                    target = c * m1(w) + (1 - c) * m2(w)
-                    self.assertAlmostEqual(combination(w), target)
+        for c in [i / 4 for i in range(4)]:
+            def lin_comb(x, y):
+                return x.linear_combination(y, c)
+            test_binary_operation(
+                self, lin_comb, lambda x, y: c*x + (1-c)*y,
+                self.get_moqfa, self.get_moqfa,
+                self.qfa_parameters, self.qfa_parameters, self.max_string_len
+            )
 
     def test_word_quotient(self):
-        for k in range(1, 8):
-            moqfa = get_measure_once_quantum_finite_automaton(k)
-            for m in range(8):
-                u = [1] * m
-                quotient = moqfa.word_quotient(u)
-                with self.subTest(k=k, m=m):
-                    for n in range(8):
-                        w = [1] * n
-                        target = moqfa(u + w)
-                        self.assertAlmostEqual(quotient(w), target)
+        for u in [[1] * n for n in range(8)]:
+            def get_quotient(m: Moqfa) -> Moqfa:
+                return m.word_quotient(u)
+            test_unary_operation(
+                self, get_quotient, lambda x: x,
+                self.get_moqfa, self.qfa_parameters, self.max_string_len,
+                lambda w: u + w
+            )
 
     def test_inverse_homomorphism(self):
-        for k in range(1, 8):
-            moqfa = get_measure_once_quantum_finite_automaton(k)
-            for m in range(8):
-                u = [1] * m
-                phi = [[0], u]
-                inverse_homomorphism = moqfa.inverse_homomorphism(phi)
-                with self.subTest(k=k, m=m):
-                    for n in range(8):
-                        w = [1] * n
-                        # phi: w |-> phi(w) = v
-                        v = reduce(lambda v, c: v + phi[c], w, [])
-                        target = moqfa(v)
-                        self.assertAlmostEqual(inverse_homomorphism(w), target)
+        # phi: [0] |-> [0] and [1] |-> [1] * n
+        for phi in [[[0], [1] * n] for n in range(8)]:
+            def get_inverse_homomorphism(m: Moqfa) -> Moqfa:
+                return m.inverse_homomorphism(phi)
+
+            def get_preimage_str(w: list[int]) -> list[int]:
+                u: list[int] = functools.reduce(lambda v, c: v + phi[c], w, [])
+                return u
+
+            test_unary_operation(
+                self, get_inverse_homomorphism, lambda x: x,
+                self.get_moqfa, self.qfa_parameters, self.max_string_len,
+                get_preimage_str
+            )
 
 
 if __name__ == '__main__':

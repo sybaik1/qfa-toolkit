@@ -3,6 +3,8 @@ from .quantum_finite_automaton_base import (
     NotClosedUnderOperationException as NotClosedUnderOperationException,
     InvalidQuantumFiniteAutomatonError as InvalidQuantumFiniteAutomatonError,
     TotalState as TotalState,
+    Transition as Transition,
+    Transitions as Transitions,
 )
 from .measure_once_quantum_finite_automaton import (
     MeasureOnceQuantumFiniteAutomaton as MeasureOnceQuantumFiniteAutomaton)

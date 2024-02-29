@@ -1,27 +1,18 @@
-from typing import (TypeVar, )
 from functools import reduce
+from typing import (TypeVar, )
 
 import numpy as np
 
-from .quantum_finite_automaton_base import TotalState
-from .quantum_finite_automaton_base import (States, Transition, Observable, )
-from .quantum_finite_automaton_base import QuantumFiniteAutomatonBase
 from .quantum_finite_automaton_base import NotClosedUnderOperationException
+from .quantum_finite_automaton_base import Observable
+from .quantum_finite_automaton_base import QuantumFiniteAutomatonBase
+from .quantum_finite_automaton_base import States
+from .quantum_finite_automaton_base import TotalState
+from .quantum_finite_automaton_base import Transition
+from .utils import direct_sum
+from .utils import get_real_valued_transition
 
 TMmqfa = TypeVar('TMmqfa', bound='MeasureManyQuantumFiniteAutomaton')
-
-
-def direct_sum(u: Transition, v: Transition) -> Transition:
-    """Returns the direct sum of two matrices.
-
-    Direct sum of U, V: (U, V) |-> [U 0; 0 V]
-    """
-    w1 = np.concatenate(
-        (u, np.zeros((u.shape[0], v.shape[1]))), axis=1)
-    w2 = np.concatenate(
-        (np.zeros((v.shape[0], u.shape[1])), v), axis=1)
-    w = np.concatenate((w1, w2), axis=0)
-    return w
 
 
 class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
@@ -241,3 +232,15 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             abs(self.transitions[:-1]) + np.eye(self.states)).astype(bool)
         connected = np.linalg.matrix_power(adjacency, self.states)[0]
         return not any(self.rejecting_states & connected)
+
+    def to_real_valued(self: TMmqfa) -> TMmqfa:
+        transitions = np.stack([
+            get_real_valued_transition(transition)
+            for transition in self.transitions
+        ]).astype(complex)
+
+        stacked_accepting = np.stack([self.accepting_states] * 2)
+        accepting_states = stacked_accepting.T.reshape(2 * self.states)
+        stacked_rejecting = np.stack([self.rejecting_states] * 2)
+        rejecting_states = stacked_rejecting.T.reshape(2 * self.states)
+        return self.__class__(transitions, accepting_states, rejecting_states)

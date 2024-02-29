@@ -6,7 +6,7 @@ from scipy.stats import chisquare  # type: ignore
 import qfa_toolkit.qiskit_converter as qc
 import qfa_toolkit.recognition_strategy as rs
 
-from .utils import get_measure_many_quantum_finite_automaton
+from .utils import get_arbitrary_mmqfa
 
 Result = rs.RecognitionStrategy.Result
 
@@ -21,7 +21,7 @@ class TestQiskitCircuit(unittest.TestCase):
 
         for k in range(1, 4):
             r = 1 / k
-            mmqfa = get_measure_many_quantum_finite_automaton(r)
+            mmqfa = get_arbitrary_mmqfa(r)
             qc_mmqfa = qc.QiskitMeasureManyQuantumFiniteAutomaton(mmqfa)
 
             for n in range(5):

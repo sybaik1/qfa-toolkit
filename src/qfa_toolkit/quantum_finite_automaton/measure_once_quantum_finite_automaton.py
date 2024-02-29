@@ -1,22 +1,29 @@
 from functools import reduce
-from itertools import product
 from typing import (TypeVar, )
 
 import numpy as np
 import numpy.typing as npt
 
-from .quantum_finite_automaton_base import TotalState
+from .quantum_finite_automaton_base import Observable
 from .quantum_finite_automaton_base import QuantumFiniteAutomatonBase
-from .quantum_finite_automaton_base import (Observable, Transition, States, )
+from .quantum_finite_automaton_base import States
+from .quantum_finite_automaton_base import TotalState
+from .quantum_finite_automaton_base import Transition
+from .quantum_finite_automaton_base import Transitions
 from ..quantum_finite_automaton.measure_many_quantum_finite_automaton import (
     MeasureManyQuantumFiniteAutomaton as Mmqfa)
+from .utils import direct_sum
+from .utils import get_real_valued_transition
 
 TMoqfa = TypeVar('TMoqfa', bound='MeasureOnceQuantumFiniteAutomaton')
 
 
-def _get_binlinear_form(moqfa: TMoqfa) -> tuple[Transition, set[int]]:
-    """Returns the (n^2) x (n^2) size binlinear form of the quantum finite
+def _get_bilinear_form(moqfa: TMoqfa) -> tuple[Transitions, States]:
+    """Returns the (n^2) x (n^2) size bilinear form of the quantum finite
     automaton.
+
+    In bilinear form ({U'(c)}_c, F') of ({U(c)}_c, F), |F' * U'(w)|^2 = F *
+    U(w).
 
     Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
     Quantum Grammars. Theoretical Computer Science (TCS'00).
@@ -26,21 +33,13 @@ def _get_binlinear_form(moqfa: TMoqfa) -> tuple[Transition, set[int]]:
         np.kron(transition.T.conj(), transition)
         for transition in moqfa.transitions
     ])
-    accepting_states = set(
-        i * moqfa.states + j for i, j
-        in product(moqfa.accepting_states, moqfa.accepting_states)
-    )
-
+    accepting_states = np.kron(moqfa.accepting_states, moqfa.accepting_states)
     return transitions, accepting_states
-
-
-def _get_real_valued_form(transition: Transition) -> npt.NDArray[np.double]:
-    raise NotImplementedError()
 
 
 def _get_stochastic_form(
     qfa: TMoqfa
-) -> tuple[npt.NDArray[np.double], set[int]]:
+) -> tuple[npt.NDArray[np.double], States]:
     """Returns the 2(n^2) x 2(n^2) size stochastic form of the quantum finite
     automaton.
 
@@ -50,7 +49,13 @@ def _get_stochastic_form(
     Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
     Quantum Grammars. Theoretical Computer Science (TCS'00).
     """
-    raise NotImplementedError()
+    transitions, accepting_states = _get_bilinear_form(qfa)
+    stochastic_transitions = np.stack([
+        get_real_valued_transition(transition) for transition in transitions])
+    states = len(accepting_states)
+    stacked = np.stack([accepting_states] * 2)
+    accpeting_states = stacked.T.reshape(2 * states)
+    return stochastic_transitions, accpeting_states
 
 
 class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
@@ -154,15 +159,6 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         if not 0 <= c and c <= 1:
             raise ValueError("c must be in [0, 1]")
 
-        # (U, V) -> [U 0; 0 V]
-        def direct_sum(u: Transition, v: Transition) -> Transition:
-            w1 = np.concatenate(
-                (u, np.zeros((u.shape[0], v.shape[1]))), axis=1)
-            w2 = np.concatenate(
-                (np.zeros((v.shape[0], u.shape[1])), v), axis=1)
-            w = np.concatenate((w1, w2), axis=0)
-            return w
-
         states = self.states + other.states
         f = np.sqrt(1 - c)
         d = np.sqrt(c)
@@ -234,6 +230,18 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
     def difference(self, other: TMoqfa) -> TMoqfa:
         raise NotImplementedError()
 
+    def to_real_valued(self: TMoqfa) -> TMoqfa:
+        transitions = np.stack([
+            get_real_valued_transition(transition)
+            for transition in self.transitions
+        ]).astype(complex)
+
+        stacked_accepting = np.stack([self.accepting_states] * 2)
+        accepting_states = stacked_accepting.T.reshape(2 * self.states)
+        stacked_rejecting = np.stack([self.rejecting_states] * 2)
+        rejecting_states = stacked_rejecting.T.reshape(2 * self.states)
+        return self.__class__(transitions, accepting_states)
+
     def equivalence(self, other: TMoqfa) -> bool:
         """Returns whether the measure-many quantum finite automaton is equal.
 
@@ -241,6 +249,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         whether M(w) = M'(w) for all w.
 
         """
+        bilinear_form = self.transitions
         raise NotImplementedError()
 
     def minimize(self: TMoqfa) -> TMoqfa:

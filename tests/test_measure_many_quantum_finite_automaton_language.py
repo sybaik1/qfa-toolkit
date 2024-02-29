@@ -4,7 +4,7 @@ import unittest
 from qfa_toolkit.recognition_strategy import IsolatedCutPoint
 from qfa_toolkit.recognition_strategy import NegativeOneSidedBoundedError
 
-from .utils import get_measure_many_quantum_finite_automaton
+from .utils import get_arbitrary_mmqfa
 from qfa_toolkit.quantum_finite_automaton_language import (
     MeasureManyQuantumFiniteAutomatonLanguage as Mmqfl)
 
@@ -12,7 +12,7 @@ from qfa_toolkit.quantum_finite_automaton_language import (
 class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
     def test_measure_many_quantum_finite_automaton_language(self):
         # M(a^n) = (1/2)^n
-        mmqfa = get_measure_many_quantum_finite_automaton(1/2)
+        mmqfa = get_arbitrary_mmqfa(1/2)
 
         isolated_cut_point = IsolatedCutPoint(3/16, 1/32)
         neg_one_sided = NegativeOneSidedBoundedError(3/4)
@@ -55,7 +55,7 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
             [1, 1, 1] in lang_invalid
 
     def test_isolated_cut_point_complement(self):
-        m1 = get_measure_many_quantum_finite_automaton(1/2)
+        m1 = get_arbitrary_mmqfa(1/2)
         isolated_cut_point_1 = IsolatedCutPoint(3/16, 1/32)
 
         l1 = Mmqfl(m1, isolated_cut_point_1)
