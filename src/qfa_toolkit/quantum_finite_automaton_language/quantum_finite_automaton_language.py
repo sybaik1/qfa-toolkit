@@ -1,31 +1,14 @@
-import itertools
 from typing import (Iterator, TypeVar, Generic, )
 
 from ..quantum_finite_automaton import QuantumFiniteAutomatonBase
 from ..recognition_strategy import RecognitionStrategy
-
+from .utils import iterate_every_string
+from .utils import iterate_length_n_strings
+from .utils import iterate_length_less_than_n_strings
 
 TQfl = TypeVar('TQfl', bound='QuantumFiniteAutomatonLanguage')
 TRecognitionStrategy = TypeVar(
     'TRecognitionStrategy', bound=RecognitionStrategy)
-
-
-def _iterate_length_n_strings(alphabet: int, n: int) -> Iterator[list[int]]:
-    return map(list, itertools.product(range(1, alphabet+1), repeat=n))
-
-
-def _iterate_length_less_than_n_strings(
-    alphabet: int, n: int
-) -> Iterator[list[int]]:
-    count = range(n)
-    iterables = map(lambda n: _iterate_length_n_strings(alphabet, n), count)
-    return itertools.chain.from_iterable(iterables)
-
-
-def _iterate_every_string(alphabet: int) -> Iterator[list[int]]:
-    count = itertools.count()
-    iterables = map(lambda n: _iterate_length_n_strings(alphabet, n), count)
-    return itertools.chain.from_iterable(iterables)
 
 
 class QuantumFiniteAutomatonLanguage(Generic[TRecognitionStrategy]):
@@ -57,15 +40,15 @@ class QuantumFiniteAutomatonLanguage(Generic[TRecognitionStrategy]):
 
     def enumerate_length_less_than_n(self, n: int) -> Iterator[list[int]]:
         length_less_than_n_strings = (
-            _iterate_length_less_than_n_strings(self.alphabet, n))
+            iterate_length_less_than_n_strings(self.alphabet, n))
         return filter(lambda w: w in self, length_less_than_n_strings)
 
     def enumerate_length_n(self, n: int) -> Iterator[list[int]]:
-        length_n_string = _iterate_length_n_strings(self.alphabet, n)
+        length_n_string = iterate_length_n_strings(self.alphabet, n)
         return filter(lambda w: w in self, length_n_string)
 
     def enumerate(self) -> Iterator[list[int]]:
-        every_string = _iterate_every_string(self.alphabet)
+        every_string = iterate_every_string(self.alphabet)
         return filter(lambda w: w in self, every_string)
 
     def concatination(self: TQfl, other: TQfl) -> TQfl:

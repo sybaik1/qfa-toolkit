@@ -1,61 +1,20 @@
+import math
 from functools import reduce
-from typing import (TypeVar, )
+from typing import (TypeVar, Optional, )
 
 import numpy as np
-import numpy.typing as npt
 
 from .quantum_finite_automaton_base import Observable
 from .quantum_finite_automaton_base import QuantumFiniteAutomatonBase
 from .quantum_finite_automaton_base import States
 from .quantum_finite_automaton_base import TotalState
 from .quantum_finite_automaton_base import Transition
-from .quantum_finite_automaton_base import Transitions
 from ..quantum_finite_automaton.measure_many_quantum_finite_automaton import (
     MeasureManyQuantumFiniteAutomaton as Mmqfa)
 from .utils import direct_sum
 from .utils import get_real_valued_transition
 
 TMoqfa = TypeVar('TMoqfa', bound='MeasureOnceQuantumFiniteAutomaton')
-
-
-def _get_bilinear_form(moqfa: TMoqfa) -> tuple[Transitions, States]:
-    """Returns the (n^2) x (n^2) size bilinear form of the quantum finite
-    automaton.
-
-    In bilinear form ({U'(c)}_c, F') of ({U(c)}_c, F), |F' * U'(w)|^2 = F *
-    U(w).
-
-    Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
-    Quantum Grammars. Theoretical Computer Science (TCS'00).
-    """
-
-    transitions = np.stack([
-        np.kron(transition.T.conj(), transition)
-        for transition in moqfa.transitions
-    ])
-    accepting_states = np.kron(moqfa.accepting_states, moqfa.accepting_states)
-    return transitions, accepting_states
-
-
-def _get_stochastic_form(
-    qfa: TMoqfa
-) -> tuple[npt.NDArray[np.double], States]:
-    """Returns the 2(n^2) x 2(n^2) size stochastic form of the quantum finite
-    automaton.
-
-    Roughly speaking, it represents the "quantum" transition matrix as a
-    "stochastic" transition matrix.
-
-    Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
-    Quantum Grammars. Theoretical Computer Science (TCS'00).
-    """
-    transitions, accepting_states = _get_bilinear_form(qfa)
-    stochastic_transitions = np.stack([
-        get_real_valued_transition(transition) for transition in transitions])
-    states = len(accepting_states)
-    stacked = np.stack([accepting_states] * 2)
-    accpeting_states = stacked.T.reshape(2 * states)
-    return stochastic_transitions, accpeting_states
 
 
 class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
@@ -105,7 +64,9 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         For a quantum finite automaton M and N, the union is defined as the
         quantum finite automaton M' such that 1 - M'(w) = (1 - M(w)) * (1 -
-        N(w)) for all w.
+        N(w)) for all w. Note that |M'| = |M||N|.
+
+        See also intersection() and complement().
         """
         return ~(~self & ~other)
 
@@ -115,7 +76,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         For a quantum finite automaton M and N, the intersection, also known as
         Hadamard product, is defined as the quantum finite automaton M' such
-        that M'(w) = M(w) * N(w) for all w.
+        that M'(w) = M(w) * N(w) for all w. Note that |M'| = |M||N|.
 
         Alberto Bertoni, Carlo Mereghetti, and Beatrice Palano. 2003. Quantum
         Computing: 1-Way Quantum Automata. In Proceedings of the 8th
@@ -136,7 +97,8 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """Returns the complement of the measure-many quantum finite automaton.
 
         For a quantum finite automaton M, the complement is defined as the
-        quantum finite automaton M' such that M'(w) = 1 - M(w) for all w.
+        quantum finite automaton M' such that M'(w) = 1 - M(w) for all w. Note
+        that |M'| = |M|.
 
         Alberto Bertoni, Carlo Mereghetti, and Beatrice Palano. 2003. Quantum
         Computing: 1-Way Quantum Automata. In Proceedings of the 8th
@@ -144,13 +106,15 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """
         return self.__class__(self.transitions, self.rejecting_states)
 
-    def linear_combination(self: TMoqfa, other: TMoqfa, c: float) -> TMoqfa:
+    def linear_combination(
+        self: TMoqfa, other: TMoqfa, c: float = 0.5
+    ) -> TMoqfa:
         """Returns the linear combination of two measure-many quantum finite
         automata.
 
         For a quantum finite automaton M, N and 0 <= c <= 1, the linear
         combination M' is an MMQFA such that M'(w) = c * M(w) + (1 - c) * N(w)
-        for all w.
+        for all w. Note that |M'| = |M| + |N|.
 
         Alberto Bertoni, Carlo Mereghetti, and Beatrice Palano. 2003. Quantum
         Computing: 1-Way Quantum Automata. In Proceedings of the 8th
@@ -184,7 +148,8 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         automaton.
 
         For a quantum finite automaton M and a word w, the word quotient M' of
-        M with respect to u is an MMQFA M' such that M'(w) = M(uw) for all w.
+        M with respect to u is an MMQFA such that M'(w) = M(uw) for all w. Note
+        that |M'| = |M|.
 
         Alex Brodsky, and Nicholas Pippenger. 2002. Characterazations of 1-Way
         Quantum Finite Automata. SIAM Jornal on Computing 31.5.
@@ -204,7 +169,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         For a quantum finite automaton M and a homomorphism phi, the inverse
         homomorphism M' of M with respect to phi is an MMQFA M' such that M'(w)
-        = M(phi(w)).
+        = M(phi(w)). Note that |M'| = |M|.
 
         Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
         Quantum Grammars. Theoretical Computer Science (TCS'00).
@@ -238,8 +203,6 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         stacked_accepting = np.stack([self.accepting_states] * 2)
         accepting_states = stacked_accepting.T.reshape(2 * self.states)
-        stacked_rejecting = np.stack([self.rejecting_states] * 2)
-        rejecting_states = stacked_rejecting.T.reshape(2 * self.states)
         return self.__class__(transitions, accepting_states)
 
     def equivalence(self, other: TMoqfa) -> bool:
@@ -248,9 +211,67 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         For quantum finite automata M and M', the equivalence is defined as
         whether M(w) = M'(w) for all w.
 
+        See also counter_example().
         """
-        bilinear_form = self.transitions
-        raise NotImplementedError()
+        return self.counter_example(other) is None
+
+    def counter_example(self, other: TMoqfa) -> Optional[list[int]]:
+        """Returns a counter example of the equality of measure-once quantum
+        finite automata.
+
+        For quantum finite automata M and M', the counter example is a word w
+        such that M(w) != M'(w). If there is no such word, it returns None.
+
+        Lvzhou Li and Daowen Qiu. 2009. A note on quantum sequential machines.
+        Theoretical Computer Science (TCS'09).
+        """
+        if self.alphabet != other.alphabet:
+            raise ValueError("Alphabets must be the same")
+        alphabet = self.alphabet
+
+        # TODO: Storing every w is inefficient.
+        # ws = [w_0, ..., w_N]
+        ws: list[list[int]] = [[0]]
+        # basis[i] = [U_{w_i}; V_{w_i}]; 1 x (n^2 + m^2)
+        basis = [np.array([self.transitions[0], self.transitions[0]])]
+        queue = [(w, basis_vector) for w, basis_vector in zip(ws, basis)]
+        while len(queue) > 0:
+            w, basis_vector = queue.pop()
+            for c in range(1, alphabet+1):
+                wc = w + [c]
+                basis_vector_candidate = np.array([
+                    self.transitions[c] @ basis_vector[0],
+                    other.transitions[c] @ basis_vector[1]
+                ])
+                new_basis = np.concatenate([basis, [basis_vector_candidate]])
+                S = np.linalg.svd(
+                    new_basis.reshape((len(new_basis), -1)),
+                    compute_uv=False
+                )
+                # basis_vector_candidate is not linearly independent
+                if np.allclose(S[-1], 0):
+                    continue
+                queue.append((wc, basis_vector_candidate))
+                basis = new_basis
+                ws.append(wc)
+
+        initial_total_state = TotalState.initial(self.states)
+
+        def transition_to_acceptance(transition: Transition) -> float:
+            total_state = initial_total_state.apply(transition)
+            measured = total_state.measure_by(self.observable)
+            return measured.acceptance
+
+        self_transitions = (self.transitions[-1] @ vec[0] for vec in basis)
+        other_transitions = (other.transitions[-1] @ vec[1] for vec in basis)
+        xs = map(transition_to_acceptance, self_transitions)
+        ys = map(transition_to_acceptance, other_transitions)
+
+        for w, x, y in zip(ws, xs, ys):
+            is_equal = math.isclose(x, y, abs_tol=1e-9)
+            if not is_equal:
+                return w[1:]
+        return None
 
     def minimize(self: TMoqfa) -> TMoqfa:
         raise NotImplementedError()
@@ -272,3 +293,36 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
     def to_measure_many_quantum_finite_automaton(self) -> Mmqfa:
         raise NotImplementedError()
+
+    def to_bilinear(self: TMoqfa) -> TMoqfa:
+        """Returns the (n^2) x (n^2) size bilinear form of the quantum finite
+        automaton.
+
+        For a quantum finite automaton M' and a word w, the bilinear form M' of
+        M is an MMQFA such that M'(w) = M(w)^2 for all w. Furthermore, the
+        superposition of the M' is always real-valued.
+
+        Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
+        Quantum Grammars. Theoretical Computer Science (TCS'00).
+        """
+
+        bilinear_transitions = np.stack([
+            np.kron(transition.T.conj(), transition)
+            for transition in self.transitions
+        ])
+        accepting_states = np.kron(
+            self.accepting_states, self.accepting_states)
+        return self.__class__(bilinear_transitions, accepting_states)
+
+    def to_stochastic_form(self: TMoqfa) -> TMoqfa:
+        """Returns the 2(n^2) x 2(n^2) size stochastic form of the quantum
+        finite automaton.
+
+        For a quantum finite automaton M' and a word w, the stochastic form M'
+        of M is an MMQFA such that M'(w) = M(w)^2 for all w. Furthermore, the
+        transitions of the M' is real-valued.
+
+        Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
+        Quantum Grammars. Theoretical Computer Science (TCS'00). """
+
+        return self.to_bilinear().to_real_valued()
