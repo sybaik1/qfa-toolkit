@@ -1,11 +1,13 @@
 import itertools
-from typing import (Iterator, )
+from typing import (Iterator, TypeVar, Generic, )
 
 from ..quantum_finite_automaton import QuantumFiniteAutomatonBase
 from ..recognition_strategy import RecognitionStrategy
 
 
-Qfl = 'QuantumFiniteAutomatonLanguage'
+TQfl = TypeVar('TQfl', bound='QuantumFiniteAutomatonLanguage')
+TRecognitionStrategy = TypeVar(
+    'TRecognitionStrategy', bound=RecognitionStrategy)
 
 
 def _iterate_length_n_strings(alphabet: int, n: int) -> Iterator[list[int]]:
@@ -26,11 +28,11 @@ def _iterate_every_string(alphabet: int) -> Iterator[list[int]]:
     return itertools.chain.from_iterable(iterables)
 
 
-class QuantumFiniteAutomatonLanguage():
+class QuantumFiniteAutomatonLanguage(Generic[TRecognitionStrategy]):
     def __init__(
         self,
         qfa: QuantumFiniteAutomatonBase,
-        strategy: RecognitionStrategy,
+        strategy: TRecognitionStrategy,
     ) -> None:
         self.qfa = qfa
         self.strategy = strategy
@@ -66,32 +68,32 @@ class QuantumFiniteAutomatonLanguage():
         every_string = _iterate_every_string(self.alphabet)
         return filter(lambda w: w in self, every_string)
 
-    def concatination(self: Qfl, other: Qfl) -> Qfl:
+    def concatination(self: TQfl, other: TQfl) -> TQfl:
         raise NotImplementedError()
 
-    def union(self: Qfl, other: Qfl) -> Qfl:
+    def union(self: TQfl, other: TQfl) -> TQfl:
         raise NotImplementedError()
 
-    def intersection(self: Qfl, other: Qfl) -> Qfl:
+    def intersection(self: TQfl, other: TQfl) -> TQfl:
         raise NotImplementedError()
 
-    def __invert__(self: Qfl) -> Qfl:
+    def __invert__(self: TQfl) -> TQfl:
         return self.complement()
 
-    def complement(self: Qfl) -> Qfl:
+    def complement(self: TQfl) -> TQfl:
         raise NotImplementedError()
 
-    def difference(self: Qfl, other: Qfl) -> Qfl:
+    def difference(self: TQfl, other: TQfl) -> TQfl:
         raise NotImplementedError()
 
-    def equivalence(self: Qfl, other: Qfl) -> bool:
+    def equivalence(self: TQfl, other: TQfl) -> bool:
         raise NotImplementedError()
 
-    def kleene_star(self: Qfl) -> Qfl:
+    def kleene_star(self: TQfl) -> TQfl:
         raise NotImplementedError()
 
-    def reverse(self: Qfl) -> Qfl:
+    def reverse(self: TQfl) -> TQfl:
         raise NotImplementedError()
 
-    def is_empty(self: Qfl) -> bool:
+    def is_empty(self: TQfl) -> bool:
         raise NotImplementedError()

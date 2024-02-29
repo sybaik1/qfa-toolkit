@@ -6,17 +6,15 @@ import numpy as np
 import numpy.typing as npt
 
 from .quantum_finite_automaton_base import TotalState
-from .quantum_finite_automaton_base import Observable
 from .quantum_finite_automaton_base import QuantumFiniteAutomatonBase
+from .quantum_finite_automaton_base import (Observable, Transition, States, )
 from ..quantum_finite_automaton.measure_many_quantum_finite_automaton import (
     MeasureManyQuantumFiniteAutomaton as Mmqfa)
 
 TMoqfa = TypeVar('TMoqfa', bound='MeasureOnceQuantumFiniteAutomaton')
 
 
-def _get_binlinear_form(
-    moqfa: TMoqfa
-) -> tuple[npt.NDArray[np.cdouble], set[int]]:
+def _get_binlinear_form(moqfa: TMoqfa) -> tuple[Transition, set[int]]:
     """Returns the (n^2) x (n^2) size binlinear form of the quantum finite
     automaton.
 
@@ -36,9 +34,7 @@ def _get_binlinear_form(
     return transitions, accepting_states
 
 
-def _get_real_valued_form(
-    transition: npt.NDArray[np.cdouble]
-) -> npt.NDArray[np.double]:
+def _get_real_valued_form(transition: Transition) -> npt.NDArray[np.double]:
     raise NotImplementedError()
 
 
@@ -60,8 +56,8 @@ def _get_stochastic_form(
 class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
     def __init__(
         self,
-        transitions: npt.NDArray[np.cdouble],
-        accepting_states: npt.NDArray[bool]
+        transitions: Transition,
+        accepting_states: States
     ) -> None:
         super().__init__(transitions)
 
@@ -71,7 +67,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         self.accepting_states = accepting_states
 
     @property
-    def rejecting_states(self) -> npt.NDArray[bool]:
+    def rejecting_states(self) -> States:
         return ~self.accepting_states
 
     @property
@@ -89,17 +85,17 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
     def step(self, total_state: TotalState, c: int) -> TotalState:
         return total_state.apply(self.transitions[c])
 
-    def word_transition(self, w: list[int]) -> npt.NDArray[np.cfloat]:
+    def word_transition(self, w: list[int]) -> Transition:
         transition = reduce(
             lambda transition, c: self.transitions[c] @ transition,
-            w, np.eye(self.states)
+            w, np.eye(self.states, dtype=complex)
         )
         return transition
 
     def concatenation(self, other: TMoqfa) -> TMoqfa:
         raise NotImplementedError()
 
-    def union(self, other: TMoqfa) -> TMoqfa:
+    def union(self: TMoqfa, other: TMoqfa) -> TMoqfa:
         """Returns the union of the measure-many quantum finite automaton.
 
         For a quantum finite automaton M and N, the union is defined as the
@@ -108,7 +104,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """
         return ~(~self & ~other)
 
-    def intersection(self, other: TMoqfa) -> TMoqfa:
+    def intersection(self: TMoqfa, other: TMoqfa) -> TMoqfa:
         """Returns the intersection of the measure-many quantum finite
         automaton.
 
@@ -143,7 +139,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """
         return self.__class__(self.transitions, self.rejecting_states)
 
-    def linear_combination(self, other: TMoqfa, c: float) -> TMoqfa:
+    def linear_combination(self: TMoqfa, other: TMoqfa, c: float) -> TMoqfa:
         """Returns the linear combination of two measure-many quantum finite
         automata.
 
@@ -159,10 +155,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             raise ValueError("c must be in [0, 1]")
 
         # (U, V) -> [U 0; 0 V]
-        def direct_sum(
-            u: npt.NDArray[np.cdouble],
-            v: npt.NDArray[np.cdouble]
-        ) -> npt.NDArray[np.cdouble]:
+        def direct_sum(u: Transition, v: Transition) -> Transition:
             w1 = np.concatenate(
                 (u, np.zeros((u.shape[0], v.shape[1]))), axis=1)
             w2 = np.concatenate(
@@ -190,7 +183,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             (self.accepting_states, other.accepting_states))
         return self.__class__(transitions, accepting_states)
 
-    def word_quotient(self, w: list[int]) -> TMoqfa:
+    def word_quotient(self: TMoqfa, w: list[int]) -> TMoqfa:
         """Returns the word quotient of the measure-many quantum finite
         automaton.
 
@@ -209,7 +202,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             self.word_transition(w) @ transitions[self.start_of_string])
         return self.__class__(transitions, self.accepting_states)
 
-    def inverse_homomorphism(self, phi: list[list[int]]) -> TMoqfa:
+    def inverse_homomorphism(self: TMoqfa, phi: list[list[int]]) -> TMoqfa:
         """Returns the inverse homomorphism of the measure-many quantum finite
         automaton.
 
@@ -248,7 +241,6 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         whether M(w) = M'(w) for all w.
 
         """
-        bilinear_form = self.transitions
         raise NotImplementedError()
 
     def minimize(self: TMoqfa) -> TMoqfa:

@@ -1,13 +1,16 @@
 import abc
 import math
-from typing import (TypeVar, Union, Generic, )
+from typing import (TypeVar, Union, )
 
 import numpy as np
 import numpy.typing as npt
 
 
-Superposition = npt.NDArray[np.cdouble]
-Observable = npt.NDArray[bool]
+Superposition = npt.NDArray[np.cdouble]  # (n, )-shape array of complex
+States = npt.NDArray[np.bool_]  # (n, )-shape array of bool
+Transitions = npt.NDArray[np.cdouble]  # (m, n, n)-shape of complex
+Transition = npt.NDArray[np.cdouble]  # (n, n)-shape of complex
+Observable = npt.NDArray[np.bool_]  # (3, n)-shape of bool
 
 
 class InvalidQuantumFiniteAutomatonError(Exception):
@@ -57,8 +60,8 @@ class TotalState():
         delta_acceptance = np.linalg.norm(acccepting_superposition) ** 2
         delta_rejection = np.linalg.norm(rejecting_superposition) ** 2
 
-        acceptance = self.acceptance + delta_acceptance
-        rejection = self.rejection + delta_rejection
+        acceptance = (self.acceptance + delta_acceptance).item()
+        rejection = (self.rejection + delta_rejection).item()
 
         return TotalState(superposition, acceptance, rejection)
 
@@ -75,10 +78,9 @@ class TotalState():
         norm = np.linalg.norm(self.superposition)
         factor = 1 / (norm ** 2 + self.acceptance + self.rejection)
         superposition = math.sqrt(factor) * self.superposition
-        acceptance = factor * self.acceptance
-        rejection = factor * self.rejection
+        acceptance = (factor * self.acceptance).item()
+        rejection = (factor * self.rejection).item()
         return TotalState(superposition, acceptance, rejection)
-
 
 
 QfaType = TypeVar('QfaType', bound='QuantumFiniteAutomatonBase')
@@ -214,16 +216,3 @@ class QuantumFiniteAutomatonBase(abc.ABC):
     @abc.abstractmethod
     def is_empty(self: QfaType) -> bool:
         raise NotImplementedError()
-
-
-class DynamicConfiguration(Generic[QfaType]):
-    def __init__(self, qfa: QfaType, q: TotalState) -> None:
-        pass
-
-    def step(self, c: str) -> None:
-        if len(c) != 1:
-            raise ValueError("c must be a single character")
-        pass
-
-    def process(self, w: str) -> None:
-        pass

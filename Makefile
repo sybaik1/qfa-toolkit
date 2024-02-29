@@ -8,6 +8,7 @@ install:
 
 $(VENV): pyproject.toml
 	python3 -m venv $(VENV)
+	touch $(VENV)
 	$(VENV)/bin/pip install --upgrade pip
 	$(VENV)/bin/pip install -e .[dev]
 
@@ -15,8 +16,12 @@ $(VENV): pyproject.toml
 check: $(VENV)
 	$(VENV)/bin/python -m unittest
 
+.PHONY: mypy
+mypy: $(VENV)
+	$(VENV)/bin/mypy src tests --explicit-package-bases
+
 .PHONY: vim
-vim: .git $(VENV)
+vim: $(VENV) | .git
 	. $(VENV)/bin/activate; vim $$(git ls-files)
 
 .git:

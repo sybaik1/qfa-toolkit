@@ -1,4 +1,4 @@
-from typing import (overload, Generic, TypeVar, )
+from typing import (TypeVar, )
 
 from .quantum_finite_automaton_language import (
     QuantumFiniteAutomatonLanguage as Qfl)
@@ -8,16 +8,20 @@ from ..recognition_strategy import RecognitionStrategy
 from ..recognition_strategy import IsolatedCutPoint
 
 
-_T = TypeVar('_T', bound=RecognitionStrategy)
+TMmqfl = TypeVar('TMmqfl', bound='MeasureManyQuantumFiniteAutomatonLanguage')
+TRecognitionStrategy = TypeVar(
+    'TRecognitionStrategy', bound=RecognitionStrategy)
 
-Mmqfl = 'MeasureManyQuantumFiniteAutomatonLanguage'
 
-
-class MeasureManyQuantumFiniteAutomatonLanguage(Qfl, Generic[_T]):
-    def __init__(self, mmqfa: Mmqfa, strategy: RecognitionStrategy) -> None:
+class MeasureManyQuantumFiniteAutomatonLanguage(Qfl[TRecognitionStrategy]):
+    def __init__(self, mmqfa: Mmqfa, strategy: TRecognitionStrategy) -> None:
+        self.qfa: Mmqfa
         super().__init__(mmqfa, strategy)
 
-    def complement(self) -> Mmqfl:
+    def complement(self: TMmqfl) -> TMmqfl:
+        if not isinstance(self.strategy, IsolatedCutPoint):
+            raise ValueError(
+                "Complement is only defined for IsolatedCutPoint strategies")
         threshold = 1.0 - self.strategy.threshold
         epsilon = self.strategy.epsilon
         isolated_cut_point = IsolatedCutPoint(threshold, epsilon)

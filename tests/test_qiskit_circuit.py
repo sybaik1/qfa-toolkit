@@ -1,8 +1,7 @@
 import unittest
 
-from qiskit.providers.basic_provider import BasicSimulator
+from qiskit.providers.basic_provider import BasicSimulator  # type: ignore
 from scipy.stats import chisquare  # type: ignore
-# from qiskit_ibm_runtime import QiskitRuntimeService, Sampler  # type: ignore
 
 import qfa_toolkit.qiskit_converter as qc
 import qfa_toolkit.recognition_strategy as rs

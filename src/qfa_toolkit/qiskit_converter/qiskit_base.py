@@ -10,7 +10,7 @@ class QiskitQuantumFiniteAutomaton(abc.ABC):
     def __init__(self, qfa: QuantumFiniteAutomatonBase):
         self.qfa = qfa
         self.size = math.ceil(math.log2(self.qfa.states))
-        self.circuit = self.transitions_to_circuit(qfa.transition)
+        self.circuit = self.transitions_to_circuit(qfa.transitions)
 
     @property
     def quantum_finite_automaton(self):

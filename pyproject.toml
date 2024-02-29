@@ -20,7 +20,8 @@ version = "0.0.1"
 # mypy global options:
 
 [tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
+python_version = "3.9"
+mypy_path = "src"
+# warn_return_any = true
+# warn_unused_configs = true
 # plugins = "numpy.typing.mypy_plugin"

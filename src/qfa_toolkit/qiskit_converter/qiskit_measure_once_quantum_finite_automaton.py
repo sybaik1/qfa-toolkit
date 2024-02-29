@@ -1,6 +1,3 @@
-from qiskit.circuit import QuantumCircuit
-import math
-
 from .qiskit_base import QiskitQuantumFiniteAutomaton
 from ..quantum_finite_automaton import MeasureOnceQuantumFiniteAutomaton
 
