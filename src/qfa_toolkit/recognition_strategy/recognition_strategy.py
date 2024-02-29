@@ -30,7 +30,10 @@ class RecognitionStrategy:
     def __call__(self, probability: float) -> Result:
 
         if probability < 0.0 or probability > 1.0:
-            raise ValueError("probability must be between 0.0 and 1.0")
+            raise ValueError(
+                "Probability must be between 0.0 and 1.0, "
+                f"but probability is {probability}."
+            )
 
         if self.reject_inclusive:
             if math.isclose(probability, self.reject_upperbound, abs_tol=1e-9):

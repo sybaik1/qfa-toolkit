@@ -1,5 +1,4 @@
 from functools import reduce
-from itertools import product
 
 import numpy as np
 import numpy.typing as npt
@@ -12,21 +11,38 @@ from .quantum_finite_automaton_base import NotClosedUnderOperationException
 Mmqfa = 'MeasureManyQuantumFiniteAutomaton'
 
 
+def direct_sum(
+    u: npt.NDArray[np.cdouble],
+    v: npt.NDArray[np.cdouble]
+) -> npt.NDArray[np.cdouble]:
+    """Returns the direct sum of two matrices.
+
+    Direct sum of U, V: (U, V) |-> [U 0; 0 V]
+    """
+    w1 = np.concatenate(
+        (u, np.zeros((u.shape[0], v.shape[1]))), axis=1)
+    w2 = np.concatenate(
+        (np.zeros((v.shape[0], u.shape[1])), v), axis=1)
+    w = np.concatenate((w1, w2), axis=0)
+    return w
+
+
 class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
     def __init__(
         self,
         transition: npt.NDArray[np.cdouble],
-        accepting_states: set[int],
-        rejecting_states: set[int],
+        accepting_states: npt.NDArray[bool],
+        rejecting_states: npt.NDArray[bool]
     ) -> None:
         super().__init__(transition)
 
-        if not all(
-            state < self.states for state
-            in accepting_states | rejecting_states
-        ):
-            raise ValueError("Halting states must be a subset of states")
-        if len(accepting_states & rejecting_states) != 0:
+        if not len(accepting_states) == self.states:
+            raise ValueError(
+                "accepting_states must be the same size as states")
+        if not len(rejecting_states) == self.states:
+            raise ValueError(
+                "rejecting_states must be the same size as states")
+        if np.any(accepting_states & rejecting_states):
             raise ValueError("Accepting and rejecting states must be disjoint")
 
         self.accepting_states = accepting_states
@@ -38,15 +54,15 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
     @property
     def non_halting_states(self) -> set[int]:
-        return set(range(self.states)) - self.halting_states
+        return ~self.halting_states
 
     @property
     def observable(self) -> Observable:
-        return (
+        return np.stack([
             self.accepting_states,
             self.rejecting_states,
             self.non_halting_states
-        )
+        ])
 
     def process(self, total_state: TotalState, w: list[int]) -> TotalState:
         return reduce(self.step, w, total_state)
@@ -62,7 +78,14 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         raise NotImplementedError()
 
     def union(self, other: Mmqfa) -> Mmqfa:
-        """Generally, MMQFA is not closed under the intersection.
+        """Returns the union of two measure-many quantum finite automata.
+
+        For a quantum finite automaton M and N, the union is defined as the
+        quantum finite automaton M' such that 1 - M'(w) = (1 - M(w)) * (1 -
+        N(w)) for all w.
+
+        Generally, MMQFA is not closed under the union. See intersection() for
+        details.
 
         Maria Paola Bianchi and Beatrice Palano. 2010. Behaviours of Unary
         Quantum Automata. Fundamenta Informaticae.
@@ -78,10 +101,15 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         return ~((~self) & (~other))
 
     def intersection(self, other: Mmqfa) -> Mmqfa:
-        """ Returns the intersection of two MMQFA.
+        """Returns the intersection of two measure-many quantum finite
+        automata.
+
+        For a quantum finite automaton M and N, the union is defined as the
+        quantum finite automaton M' such that M'(w) = M(w) * N(w) for all w.
 
         Generally, MMQFA is not closed under the intersection. However,
         end-decisive MMQFA with pure states are closed under the intersection.
+        Note that this is not a necessary condition.
 
         Maria Paola Bianchi and Beatrice Palano. 2010. Behaviours of Unary
         Quantum Automata. Fundamenta Informaticae.
@@ -93,21 +121,16 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         if not self.is_end_decisive() or not other.is_end_decisive():
             raise NotClosedUnderOperationException()
-        states = self.states * other.states
         transition = np.stack([
             np.kron(u, v) for u, v
             in zip(self.transitions, other.transitions)
         ])
-        non_halting_states = set(
-            i * other.states + j for i, j
-            in product(self.non_halting_states, other.non_halting_states)
-        )
-        halting_states = set(range(states)) - non_halting_states
-        accepting_states = set(
-            i * other.states + j for i, j
-            in product(self.accepting_states, other.accepting_states)
-        )
-        rejecting_states = halting_states - accepting_states
+        non_halting_states = np.kron(
+            self.non_halting_states, other.non_halting_states)
+        halting_states = ~non_halting_states
+        accepting_states = np.kron(
+            self.accepting_states, other.accepting_states)
+        rejecting_states = halting_states & ~accepting_states
         return self.__class__(transition, accepting_states, rejecting_states)
 
     def complement(self: Mmqfa) -> Mmqfa:
@@ -139,18 +162,6 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         if not 0 <= c and c <= 1:
             raise ValueError("c must be in [0, 1]")
 
-        # (U, V) -> [U 0; 0 V]
-        def direct_sum(
-            u: npt.NDArray[np.cdouble],
-            v: npt.NDArray[np.cdouble]
-        ) -> npt.NDArray[np.cdouble]:
-            w1 = np.concatenate(
-                (u, np.zeros((u.shape[0], v.shape[1]))), axis=1)
-            w2 = np.concatenate(
-                (np.zeros((v.shape[0], u.shape[1])), v), axis=1)
-            w = np.concatenate((w1, w2), axis=0)
-            return w
-
         states = self.states + other.states
         f = np.sqrt(1 - c)
         d = np.sqrt(c)
@@ -167,14 +178,10 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         ])
         transition[self.start_of_string] = (
             transition[self.start_of_string] @ initial_transition)
-        accepting_states = (
-            self.accepting_states
-            | set(state + self.states for state in other.accepting_states)
-        )
-        rejecting_states = (
-            self.rejecting_states
-            | set(state + self.states for state in other.rejecting_states)
-        )
+        accepting_states = np.concatenate(
+            (self.accepting_states, other.accepting_states))
+        rejecting_states = np.concatenate(
+            (self.rejecting_states, other.rejecting_states))
         return self.__class__(transition, accepting_states, rejecting_states)
 
     def word_quotient(self, w: list[int]) -> Mmqfa:
@@ -221,8 +228,8 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """
         adjacency = sum(
             abs(self.transitions[:-1]) + np.eye(self.states)).astype(bool)
-        connected = np.linalg.matrix_power(adjacency, self.states)
-        return all(not connected[0][state] for state in self.accepting_states)
+        connected = np.linalg.matrix_power(adjacency, self.states)[0]
+        return not any(self.accepting_states & connected)
 
     def is_co_end_decisive(self) -> bool:
         """Returns whether the quantum finite automaton is co-end-decisive.
@@ -235,5 +242,5 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """
         adjacency = sum(
             abs(self.transitions[:-1]) + np.eye(self.states)).astype(bool)
-        connected = np.linalg.matrix_power(adjacency, self.states)
-        return all(not connected[0][state] for state in self.rejecting_states)
+        connected = np.linalg.matrix_power(adjacency, self.states)[0]
+        return not any(self.rejecting_states & connected)

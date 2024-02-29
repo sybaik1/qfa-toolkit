@@ -15,7 +15,7 @@ def get_measure_once_quantum_finite_automaton(k: int) -> Moqfa:
 
     theta = math.pi / k
     a, b = math.cos(theta), math.sin(theta)
-    acceptings = {0}
+    acceptings = np.array([1, 0], dtype=bool)
     transition = np.array([
         [
             [1, 0],
@@ -39,8 +39,8 @@ def get_measure_many_quantum_finite_automaton(r: float) -> Mmqfa:
     M_k is end-decisive
     """
     a, b = (math.sqrt(r), math.sqrt(1-r))
-    acceptings = {2}
-    rejectings = {1}
+    acceptings = np.array([0, 0, 1], dtype=bool)
+    rejectings = np.array([0, 1, 0], dtype=bool)
     transition = np.array([
         [
             [1, 0, 0],

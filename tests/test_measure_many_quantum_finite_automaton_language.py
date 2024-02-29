@@ -54,6 +54,19 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
         with self.assertRaises(ValueError):
             [1, 1, 1] in lang_invalid
 
+    def test_isolated_cut_point_complement(self):
+        m1 = get_measure_many_quantum_finite_automaton(1/2)
+        isolated_cut_point_1 = IsolatedCutPoint(3/16, 1/32)
+
+        l1 = Mmqfl(m1, isolated_cut_point_1)
+        l2 = ~l1
+
+        n = 100
+        self.assertTrue(all(map(
+            lambda w: w not in l2, l1.enumerate_length_less_than_n(n))))
+        self.assertTrue(all(map(
+            lambda w: w not in l1, l2.enumerate_length_less_than_n(n))))
+
 
 if __name__ == '__main__':
     unittest.main()

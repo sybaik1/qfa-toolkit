@@ -7,7 +7,7 @@ import numpy.typing as npt
 
 
 Superposition = npt.NDArray[np.cdouble]
-Observable = tuple[set[int], set[int], set[int]]
+Observable = npt.NDArray[bool]
 
 
 class InvalidQuantumFiniteAutomatonError(Exception):
@@ -46,39 +46,39 @@ class TotalState():
         superposition[0] = 1
         return TotalState(superposition, 0, 0)
 
-    def measure_by(
-        self,
-        observable: Observable,
-    ) -> 'TotalState':
-        acceptings, rejectings, non_haltings = observable
+    def measure_by(self, observable: Observable) -> 'TotalState':
 
-        def projection(
-            superposition: Superposition,
-            axis: set[int]
-        ) -> Superposition:
-            mask = np.zeros(self.superposition.shape, dtype=np.cdouble)
-            mask[list(axis)] = 1
-            return self.superposition * mask
+        superpositions = observable * self.superposition
 
-        acccepting_superposition = projection(self.superposition, acceptings)
+        acccepting_superposition = superpositions[0]
+        rejecting_superposition = superpositions[1]
+        superposition = superpositions[2]
+
         delta_acceptance = np.linalg.norm(acccepting_superposition) ** 2
-        assert isinstance(delta_acceptance, float)
-        acceptance = self.acceptance + delta_acceptance
-
-        rejecting_superposition = projection(self.superposition, rejectings)
         delta_rejection = np.linalg.norm(rejecting_superposition) ** 2
-        assert isinstance(delta_rejection, float)
+
+        acceptance = self.acceptance + delta_acceptance
         rejection = self.rejection + delta_rejection
 
-        superposition = projection(self.superposition, non_haltings)
         return TotalState(superposition, acceptance, rejection)
 
     def apply(self, unitary: npt.NDArray[np.cdouble]) -> 'TotalState':
         superposition = unitary @ self.superposition
-        return TotalState(superposition, self.acceptance, self.rejection)
+        total_state = TotalState(
+            superposition, self.acceptance, self.rejection)
+        return total_state.normalized()
 
     def to_tuple(self) -> tuple[Superposition, float, float]:
         return (self.superposition, self.acceptance, self.rejection)
+
+    def normalized(self) -> 'TotalState':
+        norm = np.linalg.norm(self.superposition)
+        factor = 1 / (norm ** 2 + self.acceptance + self.rejection)
+        superposition = math.sqrt(factor) * self.superposition
+        acceptance = factor * self.acceptance
+        rejection = factor * self.rejection
+        return TotalState(superposition, acceptance, rejection)
+
 
 
 QfaType = TypeVar('QfaType', bound='QuantumFiniteAutomatonBase')

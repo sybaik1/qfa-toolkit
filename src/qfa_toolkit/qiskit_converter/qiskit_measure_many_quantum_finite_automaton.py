@@ -23,9 +23,9 @@ class QiskitMeasureManyQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
                                         to qfa state
         """
         self.qfa: Mmqfa = qfa
-        self.accepting_states: set[int] = qfa.accepting_states
-        self.rejecting_states: set[int] = qfa.rejecting_states
-        self.non_halting_states: set[int] = self.qfa.non_halting_states
+        self.accepting_states = set(np.flatnonzero(qfa.accepting_states))
+        self.rejecting_states = set(np.flatnonzero(qfa.rejecting_states))
+        self.non_halting_states = set(np.flatnonzero(qfa.non_halting_states))
         self.mapping: dict[int, int] = {}
         self.circuit = self.transitions_to_circuit(qfa.transitions)
 
