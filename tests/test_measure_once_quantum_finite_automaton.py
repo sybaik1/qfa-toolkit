@@ -13,7 +13,6 @@ from .utils import test_qfa
 from .utils import test_unary_operation
 from .utils import test_binary_operation
 from .utils import test_total_state_during_process
-from .utils import multiply_arbitrary_global_phase
 
 
 class TestMeasureOnceQuantumFiniteAutomaton(unittest.TestCase):
@@ -111,14 +110,12 @@ class TestMeasureOnceQuantumFiniteAutomaton(unittest.TestCase):
         for k1, k2 in itertools.product(self.qfa_parameters, repeat=2):
             m1 = self.get_moqfa(k1)
             m2 = self.get_moqfa(k2)
-            m2.transitions = multiply_arbitrary_global_phase(m2.transitions)
             self.assertEqual(m1 == m2, k1 == k2)
 
     def test_counter_example(self):
         for k1, k2 in itertools.product(self.qfa_parameters, repeat=2):
             m1 = self.get_moqfa(k1)
             m2 = self.get_moqfa(k2)
-            m2.transitions = multiply_arbitrary_global_phase(m2.transitions)
             counter_example = m1.counter_example(m2)
             if counter_example is not None:
                 self.assertNotAlmostEqual(

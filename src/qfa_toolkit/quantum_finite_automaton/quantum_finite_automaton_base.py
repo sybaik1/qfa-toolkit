@@ -117,7 +117,7 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         return self.alphabet + 1
 
     def __call__(self, w: list[int]) -> float:
-        tape = self._string_to_tape(w)
+        tape = [0] + w + [self.end_of_string]
         last_total_state = self.process(TotalState.initial(self.states), tape)
         _, acceptance, rejection = last_total_state.to_tuple()
         if not math.isclose(acceptance + rejection, 1):
@@ -221,26 +221,3 @@ class QuantumFiniteAutomatonBase(abc.ABC):
     @abc.abstractmethod
     def is_empty(self: QfaType) -> bool:
         raise NotImplementedError()
-
-    def _string_to_number(self, string: list[int]) -> int:
-        """Returns the integer representation of the string.
-
-        Returns the sum of c * (alphabet ** i) for i, c in enumerate(string)
-        """
-        return sum(c * (self.alphabet ** c) for i, c in enumerate(string))
-
-    def _number_to_string(self, number: int) -> list[int]:
-        """Returns the string representation of the number.
-
-        See _string_to_number for details.
-        """
-        if self.alphabet == 1:
-            return [1] * number
-        string = []
-        while number != 0:
-            string.append(number % self.alphabet)
-            number //= self.alphabet
-        return string
-
-    def _string_to_tape(self, string: list[int]) -> list[int]:
-        return [self.start_of_string] + string + [self.end_of_string]

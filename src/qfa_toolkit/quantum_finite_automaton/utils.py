@@ -20,6 +20,12 @@ def direct_sum(u: Transition, v: Transition) -> Transition:
 def get_real_valued_transition(
     transition: Transition
 ) -> npt.NDArray[np.double]:
+    """Returns the 2n x 2n size real-valued form of the quantum finite
+    automaton.
+
+    Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
+    Quantum Grammars. Theoretical Computer Science (TCS'00).
+    """
     stacked = np.stack([
         [transition.real, transition.imag],
         [-transition.imag, transition.real]
