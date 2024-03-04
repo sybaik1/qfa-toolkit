@@ -1,4 +1,3 @@
-from functools import reduce
 from typing import (TypeVar, Optional, )
 
 import numpy as np
@@ -52,13 +51,14 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             self.non_halting_states
         ])
 
-    def process(self, total_state: TotalState, w: list[int]) -> TotalState:
-        return reduce(self.step, w, total_state)
-
     def step(self, total_state: TotalState, c: int) -> TotalState:
         total_state = total_state.apply(self.transitions[c])
         total_state = total_state.measure_by(self.observable)
         return total_state
+
+    def __call__(self, w):
+        tape = self.string_to_tape(w)
+        return self.process(tape).acceptance
 
     def concatenation(self, other: TMmqfa) -> TMmqfa:
         if self.alphabet != other.alphabet:

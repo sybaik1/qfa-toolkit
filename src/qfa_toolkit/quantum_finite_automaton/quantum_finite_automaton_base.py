@@ -1,6 +1,7 @@
+from functools import reduce
 import abc
 import math
-from typing import (TypeVar, Union, )
+from typing import (TypeVar, Union, Optional, )
 
 import numpy as np
 import numpy.typing as npt
@@ -26,8 +27,8 @@ class TotalState():
     def __init__(
         self,
         superposition_or_list: Union[Superposition, list[complex]],
-        acceptance: float,
-        rejection: float
+        acceptance: float = 0,
+        rejection: float = 0
     ) -> None:
         superposition = np.array(superposition_or_list, dtype=np.cdouble)
         norm_square = np.linalg.norm(superposition) ** 2
@@ -47,7 +48,7 @@ class TotalState():
     def initial(self, states: int) -> 'TotalState':
         superposition = np.zeros(states, dtype=np.cdouble)
         superposition[0] = 1
-        return TotalState(superposition, 0, 0)
+        return TotalState(superposition)
 
     def measure_by(self, observable: Observable) -> 'TotalState':
 
@@ -124,20 +125,23 @@ class QuantumFiniteAutomatonBase(abc.ABC):
     def final_transition(self) -> Transition:
         return self.transitions[self.end_of_string]
 
+    @abc.abstractmethod
     def __call__(self, w: list[int]) -> float:
-        tape = self.to_tape(w)
-        last_total_state = self.process(TotalState.initial(self.states), tape)
+        tape = self.string_to_tape(w)
+        last_total_state = self.process(tape)
         _, acceptance, rejection = last_total_state.to_tuple()
         if not math.isclose(acceptance + rejection, 1):
             raise InvalidQuantumFiniteAutomatonError()
         return acceptance
 
-    def to_tape(self, w: list[int]) -> list[int]:
-        return [self.start_of_string] + w + [self.end_of_string]
-
-    @abc.abstractmethod
-    def process(self, total_state: TotalState, w: list[int]) -> TotalState:
-        raise NotImplementedError()
+    def process(
+        self,
+        w: list[int],
+        total_state: Optional[TotalState] = None
+    ) -> TotalState:
+        if total_state is None:
+            return self.process(w, TotalState.initial(self.states))
+        return reduce(self.step, w, total_state)
 
     @abc.abstractmethod
     def step(self, total_state: TotalState, c: int) -> TotalState:
@@ -227,3 +231,26 @@ class QuantumFiniteAutomatonBase(abc.ABC):
     @abc.abstractmethod
     def is_empty(self: QfaType) -> bool:
         raise NotImplementedError()
+
+    def _string_to_number(self, string: list[int]) -> int:
+        """Returns the integer representation of the string.
+
+        Returns the sum of c * (alphabet ** i) for i, c in enumerate(string)
+        """
+        return sum(c * (self.alphabet ** c) for i, c in enumerate(string))
+
+    def _number_to_string(self, number: int) -> list[int]:
+        """Returns the string representation of the number.
+
+        See _string_to_number for details.
+        """
+        if self.alphabet == 1:
+            return [1] * number
+        string = []
+        while number != 0:
+            string.append(number % self.alphabet)
+            number //= self.alphabet
+        return string
+
+    def string_to_tape(self, string: list[int]) -> list[int]:
+        return [self.start_of_string] + string + [self.end_of_string]
