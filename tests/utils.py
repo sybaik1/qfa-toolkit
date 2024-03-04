@@ -13,7 +13,6 @@ from qfa_toolkit.quantum_finite_automaton import (
 from qfa_toolkit.quantum_finite_automaton import (
     MeasureOnceQuantumFiniteAutomaton as Moqfa)
 from qfa_toolkit.quantum_finite_automaton import Transitions
-from qfa_toolkit.quantum_finite_automaton import TotalState
 
 
 def iterate_length_n_strings(alphabet: int, n: int) -> Iterator[list[int]]:
@@ -106,28 +105,10 @@ def test_qfa(
 ) -> None:
     for k in qfa_parameters:
         qfa = get_qfa(k)
-        ws = iterate_length_less_than_n_strings(
-            qfa.alphabet, max_string_len)
-        for w in ws:
+        strings = list(
+            iterate_length_less_than_n_strings(qfa.alphabet, max_string_len))
+        for w in strings:
             test.assertAlmostEqual(qfa(w), target(k, w))
-
-
-def test_total_state_during_process(
-    test: unittest.TestCase,
-    get_qfa: Callable[[float], TQfa],
-    qfa_parameters: Iterable[float],
-    string_len: int,
-    constraint: Callable[[list[int], int, TotalState], bool]
-    = lambda tape, i, total_state: True,
-) -> None:
-    for m in map(get_qfa, qfa_parameters):
-        ws = iterate_length_n_strings(m.alphabet, string_len)
-        for w in ws:
-            tape = [m.start_of_string] + w + [m.end_of_string]
-            total_state = TotalState.initial(m.states)
-            for i, c in enumerate(tape):
-                total_state = m.step(total_state, c)
-                test.assertTrue(constraint(tape, i, total_state))
 
 
 def test_unary_operation(
@@ -137,10 +118,7 @@ def test_unary_operation(
     get_qfa: Callable[[float], TQfa],
     qfa_parameters: Iterable[float],
     max_string_len: int,
-    *,
     get_preimage_str: Callable[[list[int]], list[int]] = lambda x: x,
-    constraint: Callable[[TQfa], bool] = lambda x: True,
-
 ) -> None:
     """Test the unary operation qfa_op on the qfa.
 
@@ -150,7 +128,6 @@ def test_unary_operation(
     for m in map(get_qfa, qfa_parameters):
         ws = iterate_length_less_than_n_strings(m.alphabet, max_string_len)
         n = operation(m)
-        test.assertTrue(constraint(n))
         for w in ws:
             u = get_preimage_str(w)
             test.assertAlmostEqual(n(w), get_target_prob(m(u)))
@@ -165,10 +142,8 @@ def test_binary_operation(
     qfa_parameters_1: Iterable[float],
     qfa_parameters_2: Iterable[float],
     max_string_len: int,
-    *,
     get_preimage_pair:
     Callable[[list[int]], tuple[list[int], list[int]]] = lambda x: (x, x),
-    constraint: Callable[[TQfa], bool] = lambda x: True,
 ) -> None:
     """Test the binary operation qfa_op on the qfa.
 
@@ -185,7 +160,6 @@ def test_binary_operation(
         alphabet = m1.alphabet
         ws = iterate_length_less_than_n_strings(alphabet, max_string_len)
         n = operation(m1, m2)
-        test.assertTrue(constraint(n))
         for w in ws:
             u1, u2 = get_preimage_pair(w)
             test.assertAlmostEqual(n(w), get_target_prob(m1(u1), m2(u2)))

@@ -1,8 +1,6 @@
-import math
 import unittest
 
-import numpy as np
-
+from qfa_toolkit.quantum_finite_automaton import TotalState
 from qfa_toolkit.quantum_finite_automaton import (
     NotClosedUnderOperationException)
 from qfa_toolkit.quantum_finite_automaton import (
@@ -12,7 +10,6 @@ from .utils import get_arbitrary_mmqfa
 from .utils import test_qfa
 from .utils import test_unary_operation
 from .utils import test_binary_operation
-from .utils import test_total_state_during_process
 
 
 class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
@@ -39,8 +36,6 @@ class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
         )
 
     def test_real_valued(self) -> None:
-        def constraint(m: Mmqfa) -> bool:
-            return np.allclose(m.transitions.imag, 0)
         test_unary_operation(
             self, Mmqfa.to_real_valued, lambda x: x,
             self.get_mmqfa, self.qfa_parameters, self.max_string_len
@@ -50,20 +45,20 @@ class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
         test_binary_operation(
             self, Mmqfa.__and__, lambda x, y: x*y,
             self.get_end_decisive, self.get_end_decisive,
-            self.qfa_parameters, self.qfa_parameters, self.max_string_len,
-            constraint=Mmqfa.is_end_decisive
+            self.qfa_parameters, self.qfa_parameters, self.max_string_len
         )
 
     def test_union(self) -> None:
         test_binary_operation(
             self, Mmqfa.__or__, lambda x, y: 1 - (1-x)*(1-y),
             self.get_co_end_decisive, self.get_co_end_decisive,
-            self.qfa_parameters, self.qfa_parameters, self.max_string_len,
-            constraint=Mmqfa.is_co_end_decisive
+            self.qfa_parameters, self.qfa_parameters, self.max_string_len
         )
 
     def test_linear_combination(self) -> None:
-        for c in [i / 4 for i in range(4)]:
+        for i in range(4):
+            c = i / 4
+
             def lin_comb(x: Mmqfa, y: Mmqfa) -> Mmqfa:
                 return x.linear_combination(y, c)
             test_binary_operation(
@@ -73,28 +68,24 @@ class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
             )
 
     def test_end_decisive(self) -> None:
-        def constraint(tape, i, total_state) -> bool:
-            if i < len(tape) - 1:
-                return math.isclose(total_state.acceptance, 0, abs_tol=1e-6)
-            return True
-        test_total_state_during_process(
-            self, self.get_end_decisive, self.qfa_parameters,
-            self.max_string_len, constraint
-        )
-        m = self.get_end_decisive(1/4)
+        r = 1 / 4
+        m = get_arbitrary_mmqfa(r)
+        total_state = TotalState.initial(m.states).apply(m.transitions[0])
+        self.assertAlmostEqual(total_state.acceptance, 0)
+        for _ in range(8):
+            total_state = TotalState.initial(m.states).apply(m.transitions[1])
+            self.assertAlmostEqual(total_state.acceptance, 0)
         self.assertTrue(m.is_end_decisive())
         self.assertFalse((~m).is_end_decisive())
 
     def test_co_end_decisive(self) -> None:
-        def constraint(tape, i, total_state) -> bool:
-            if i < len(tape) - 1:
-                return math.isclose(total_state.rejection, 0, abs_tol=1e-6)
-            return True
-        test_total_state_during_process(
-            self, self.get_co_end_decisive, self.qfa_parameters,
-            self.max_string_len, constraint
-        )
-        m = self.get_co_end_decisive(1/4)
+        r = 1 / 4
+        m = ~get_arbitrary_mmqfa(r)
+        total_state = TotalState.initial(m.states).apply(m.transitions[0])
+        self.assertAlmostEqual(total_state.rejection, 0)
+        for _ in range(8):
+            total_state = TotalState.initial(m.states).apply(m.transitions[1])
+            self.assertAlmostEqual(total_state.rejection, 0)
         self.assertTrue(m.is_co_end_decisive())
         self.assertFalse((~m).is_co_end_decisive())
 

@@ -190,11 +190,6 @@ class QuantumFiniteAutomatonBase(abc.ABC):
     def equivalence(self: QfaType, other: QfaType) -> bool:
         raise NotImplementedError()
 
-    def __eq__(self: QfaType, other: object) -> bool:
-        if isinstance(other, self.__class__):
-            return self.equivalence(other)
-        raise NotADirectoryError()
-
     @abc.abstractmethod
     def minimize(self: QfaType) -> QfaType:
         raise NotImplementedError()
