@@ -116,13 +116,24 @@ class QuantumFiniteAutomatonBase(abc.ABC):
     def end_of_string(self) -> int:
         return self.alphabet + 1
 
+    @property
+    def initial_transition(self) -> Transition:
+        return self.transitions[self.start_of_string]
+
+    @property
+    def final_transition(self) -> Transition:
+        return self.transitions[self.end_of_string]
+
     def __call__(self, w: list[int]) -> float:
-        tape = [0] + w + [self.end_of_string]
+        tape = self.to_tape(w)
         last_total_state = self.process(TotalState.initial(self.states), tape)
         _, acceptance, rejection = last_total_state.to_tuple()
         if not math.isclose(acceptance + rejection, 1):
             raise InvalidQuantumFiniteAutomatonError()
         return acceptance
+
+    def to_tape(self, w: list[int]) -> list[int]:
+        return [self.start_of_string] + w + [self.end_of_string]
 
     @abc.abstractmethod
     def process(self, total_state: TotalState, w: list[int]) -> TotalState:

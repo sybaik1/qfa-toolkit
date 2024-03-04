@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import (TypeVar, )
+from typing import (TypeVar, Optional, )
 
 import numpy as np
 
@@ -181,6 +181,23 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         raise NotImplementedError()
 
     def equivalence(self, other: TMmqfa) -> bool:
+        """Returns whether the measure-many quantum finite automaton is equal.
+
+        For quantum finite automata M and M', the equivalence is defined as
+        whether M(w) = M'(w) for all w.
+
+        See also counter_example().
+
+        """
+        return self.counter_example(other) is None
+
+    def counter_example(self, other: TMmqfa) -> Optional[list[int]]:
+        """Returns a counter example of the equivalence of the measure-many
+        quantum finite automaton.
+
+        For quantum finite automata M and M', the counter example is defined as
+        a word w such that M(w) != M'(w).
+        """
         if self.alphabet != other.alphabet:
             raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
