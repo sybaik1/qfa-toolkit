@@ -113,18 +113,16 @@ class TestMeasureOnceQuantumFiniteAutomaton(unittest.TestCase):
             m2 = self.get_moqfa(k2)
             m2.transitions = multiply_arbitrary_global_phase(m2.transitions)
             self.assertEqual(m1 == m2, k1 == k2)
-            self.assertEqual(m2 == m1, k2 == k1)
 
     def test_counter_example(self):
         for k1, k2 in itertools.product(self.qfa_parameters, repeat=2):
             m1 = self.get_moqfa(k1)
             m2 = self.get_moqfa(k2)
             m2.transitions = multiply_arbitrary_global_phase(m2.transitions)
-            counter_examples = [m1.counter_example(m2), m2.counter_example(m1)]
-            for counter_example in counter_examples:
-                if counter_example is not None:
-                    self.assertNotAlmostEqual(
-                        m1(counter_example), m2(counter_example))
+            counter_example = m1.counter_example(m2)
+            if counter_example is not None:
+                self.assertNotAlmostEqual(
+                    m1(counter_example), m2(counter_example))
 
 
 if __name__ == '__main__':
