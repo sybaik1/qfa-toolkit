@@ -236,6 +236,9 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             raise ValueError("Alphabets must be the same")
         alphabet = self.alphabet
 
+        w = [1, 1, 1]
+        n = self._string_to_number([1, 1, 1])
+
         # ns = [n(w_0), ..., n(w_N)], n = string_to_number
         ns = [self._string_to_number([])]
         # basis.reshape(...)[i] = [U_{^w_i}; V_{^w_i}]; 1 x (n^2 + m^2)
