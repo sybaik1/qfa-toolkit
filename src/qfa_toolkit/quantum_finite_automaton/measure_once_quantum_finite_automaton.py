@@ -58,6 +58,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
     def concatenation(self, other: TMoqfa) -> TMoqfa:
         raise NotImplementedError()
+        raise NotImplementedError()
 
     def union(self: TMoqfa, other: TMoqfa) -> TMoqfa:
         """Returns the union of the measure-many quantum finite automaton.
@@ -196,6 +197,12 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         raise NotImplementedError()
 
     def to_real_valued(self: TMoqfa) -> TMoqfa:
+        """Returns the 2n x 2n size real-valued form of the quantum finite
+        automaton.
+
+        Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
+        Quantum Grammars. Theoretical Computer Science (TCS'00).
+        """
         transitions = np.stack([
             get_real_valued_transition(transition)
             for transition in self.transitions
@@ -229,12 +236,22 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             raise ValueError("Alphabets must be the same")
         alphabet = self.alphabet
 
-        # TODO: Storing every w is inefficient.
-        # ws = [w_0, ..., w_N]
-        ws: list[list[int]] = [[0]]
-        # basis[i] = [U_{w_i}; V_{w_i}]; 1 x (n^2 + m^2)
-        basis = [np.array([self.transitions[0], self.transitions[0]])]
-        queue = [(w, basis_vector) for w, basis_vector in zip(ws, basis)]
+        w = [1, 1, 1]
+        n = self._string_to_number([1, 1, 1])
+
+        # ns = [n(w_0), ..., n(w_N)], n = string_to_number
+        ns = [self._string_to_number([])]
+        # basis.reshape(...)[i] = [U_{^w_i}; V_{^w_i}]; 1 x (n^2 + m^2)
+        basis = [
+            np.array([
+                self.transitions[self.start_of_string],
+                other.transitions[other.start_of_string]
+            ])
+        ]
+        queue = [
+            (self._number_to_string(n), basis_vector)
+            for n, basis_vector in zip(ns, basis)
+        ]
         while len(queue) > 0:
             w, basis_vector = queue.pop()
             for c in range(1, alphabet+1):
@@ -243,17 +260,19 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
                     self.transitions[c] @ basis_vector[0],
                     other.transitions[c] @ basis_vector[1]
                 ])
-                new_basis = np.concatenate([basis, [basis_vector_candidate]])
+                basis_candidate = np.concatenate(
+                    [basis, [basis_vector_candidate]])
                 S = np.linalg.svd(
-                    new_basis.reshape((len(new_basis), -1)),
+                    basis_candidate.reshape((len(basis_candidate), -1)),
                     compute_uv=False
                 )
-                # basis_vector_candidate is not linearly independent
+                # basis_candidate is not linearly independent
                 if np.allclose(S[-1], 0):
                     continue
                 queue.append((wc, basis_vector_candidate))
-                basis = new_basis
-                ws.append(wc)
+                basis = basis_candidate
+                # print(wc, self._string_to_number(wc))
+                ns.append(self._string_to_number(wc))
 
         initial_total_state = TotalState.initial(self.states)
 
@@ -262,15 +281,16 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             measured = total_state.measure_by(self.observable)
             return measured.acceptance
 
-        self_transitions = (self.transitions[-1] @ vec[0] for vec in basis)
-        other_transitions = (other.transitions[-1] @ vec[1] for vec in basis)
+        last_transition = self.transitions[self.end_of_string]
+        self_transitions = (last_transition @ vec[0] for vec in basis)
+        other_transitions = (last_transition @ vec[1] for vec in basis)
         xs = map(transition_to_acceptance, self_transitions)
         ys = map(transition_to_acceptance, other_transitions)
 
-        for w, x, y in zip(ws, xs, ys):
+        for n, x, y in zip(ns, xs, ys):
             is_equal = math.isclose(x, y, abs_tol=1e-9)
             if not is_equal:
-                return w[1:]
+                return self._number_to_string(n)
         return None
 
     def minimize(self: TMoqfa) -> TMoqfa:

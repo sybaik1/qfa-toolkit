@@ -31,7 +31,7 @@ def iterate_length_less_than_n_strings(
 def multiply_arbitrary_global_phase(transitions: Transitions) -> Transitions:
     transitions = np.array(transitions)
     global_phases = np.array([
-        [cmath.exp((cmath.pi / 2 ** i) * 1j)]
+        [cmath.exp((cmath.pi / 2 ** (i+1)) * 1j)]
         for i, _ in enumerate(transitions)
     ])
 
