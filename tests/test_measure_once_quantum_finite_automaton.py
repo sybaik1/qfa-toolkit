@@ -12,7 +12,7 @@ from .utils import get_arbitrary_moqfa
 from .utils import test_qfa
 from .utils import test_unary_operation
 from .utils import test_binary_operation
-from .utils import test_total_state_during_process
+from .utils import test_bilinearize_operation
 from .utils import multiply_arbitrary_global_phase
 
 
@@ -46,15 +46,20 @@ class TestMeasureOnceQuantumFiniteAutomaton(unittest.TestCase):
         )
 
     def test_to_bilinear(self) -> None:
-        def constraint(tape, i, total_state) -> bool:
-            return np.allclose(total_state.superposition.imag, 0)
-        test_total_state_during_process(
-            self, lambda e: self.get_moqfa(e).to_bilinear(),
-            self.qfa_parameters, self.max_string_len, constraint
+        test_bilinearize_operation(
+            self, Moqfa.to_bilinear,
+            self.get_moqfa,
+            self.qfa_parameters, self.max_string_len
         )
-        test_unary_operation(
-            self, Moqfa.to_bilinear, lambda x: x ** 2,
-            self.get_moqfa, self.qfa_parameters, self.max_string_len
+
+    def test_to_stochastic(self) -> None:
+        def constraint(m: Moqfa) -> bool:
+            return np.allclose(m.transitions.imag, 0)
+        test_bilinearize_operation(
+            self, Moqfa.to_stochastic,
+            self.get_moqfa,
+            self.qfa_parameters, self.max_string_len,
+            constraint=constraint
         )
 
     def test_to_without_initial_transition(self):

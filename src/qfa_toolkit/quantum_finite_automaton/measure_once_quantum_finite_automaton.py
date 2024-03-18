@@ -115,7 +115,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         measure-once quantum finite automata.
 
         For a quantum finite automaton M, N and 0 <= c <= 1, the linear
-        combination M' is an MMQFA such that M'(w) = c * M(w) + (1 - c) * N(w)
+        combination M' is an MOQFA such that M'(w) = c * M(w) + (1 - c) * N(w)
         for all w.
 
         Alberto Bertoni, Carlo Mereghetti, and Beatrice Palano. 2003. Quantum
@@ -150,7 +150,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         automaton.
 
         For a quantum finite automaton M and a word w, the word quotient M' of
-        M with respect to u is an MMQFA M' such that M'(w) = M(uw) for all w.
+        M with respect to u is an MOQFA M' such that M'(w) = M(uw) for all w.
 
         Alex Brodsky, and Nicholas Pippenger. 2002. Characterizations of 1-Way
         Quantum Finite Automata. SIAM Jornal on Computing 31.5.
@@ -169,7 +169,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         automaton.
 
         For a quantum finite automaton M and a homomorphism phi, the inverse
-        homomorphism M' of M with respect to phi is an MMQFA M' such that M'(w)
+        homomorphism M' of M with respect to phi is an MOQFA M' such that M'(w)
         = M(phi(w)).
 
         Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
@@ -265,9 +265,9 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """Returns the (n^2)-size bilinear form of the quantum finite
         automaton.
 
-        For a quantum finite automaton M' and a word w, the bilinear form M' of
-        M is an MMQFA such that M'(w) = M(w)^2 for all w. Furthermore, the
-        superposition of the M' is always real-valued.
+        For a quantum finite automaton M, the bilinear form M' of M is an
+        automaton such that M(w) is the sum of amplitude of the accepting
+        states at the end of the computation of M'.
 
         Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
         Quantum Grammars. Theoretical Computer Science (TCS'00).
@@ -277,16 +277,18 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             np.kron(transition.T.conj(), transition)
             for transition in self.transitions
         ])
-        accepting_states = np.kron(
-            self.accepting_states, self.accepting_states)
+        accepting_states = np.zeros(self.states ** 2, dtype=bool)
+        indices = self.accepting_states.nonzero()[0]
+        accepting_states[[i * i for i in indices]] = True
         return self.__class__(bilinear_transitions, accepting_states)
 
     def to_stochastic(self: TMoqfa) -> TMoqfa:
         """Returns the 2(n^2)-size stochastic form of the quantum
         finite automaton.
 
-        For a quantum finite automaton M' and a word w, the stochastic form M'
-        of M is an MMQFA such that M'(w) = M(w)^2 for all w. Furthermore, the
+        For a quantum finite automaton M, the bilinear form M' of M is an
+        automaton such that M(w) is the sum of amplitude of the accepting
+        states at the end of the computation of M'. Furthermore, the
         transitions of the M' is real-valued.
 
         Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and

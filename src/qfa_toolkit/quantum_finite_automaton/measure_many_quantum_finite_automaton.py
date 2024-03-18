@@ -92,11 +92,12 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """Returns the intersection of two measure-many quantum finite
         automata.
 
-        For a quantum finite automaton M and N, the union is defined as the
-        quantum finite automaton M' such that M'(w) = M(w) * N(w) for all w.
+        For a quantum finite automaton M and N, the intersection is defined as
+        the quantum finite automaton M' such that M'(w) = M(w) * N(w) for all
+        w.
 
         Generally, MMQFA is not closed under the intersection. However,
-        end-decisive MMQFA with pure states are closed under the intersection.
+        end-decisive MMQFAs with pure states are closed under the intersection.
         Note that this is not a necessary condition.
 
         Maria Paola Bianchi and Beatrice Palano. 2010. Behaviours of Unary
@@ -229,7 +230,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         read end-of-string.
 
         Alex Brodsky and Nicholas Pippenger. 2002. Characterizations of 1-way
-        Quantum Finite Automata. SIAM Jornal on Computing.
+        Quantum Finite Automata. SIAM Journal on Computing.
         """
         adjacency = sum(
             abs(self.transitions[:-1]) + np.eye(self.states)).astype(bool)
@@ -243,7 +244,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         read end-of-string.
 
         Alex Brodsky and Nicholas Pippenger. 2002. Characterizations of 1-way
-        Quantum Finite Automata. SIAM Jornal on Computing.
+        Quantum Finite Automata. SIAM Journal on Computing.
         """
         adjacency = sum(
             abs(self.transitions[:-1]) + np.eye(self.states)).astype(bool)

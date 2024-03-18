@@ -30,11 +30,9 @@ def iterate_length_less_than_n_strings(
 
 def multiply_arbitrary_global_phase(transitions: Transitions) -> Transitions:
     transitions = np.array(transitions)
-    global_phases = np.array([
-        [cmath.exp((cmath.pi / 2 ** (i+1)) * 1j)]
-        for i, _ in enumerate(transitions)
-    ])
-
+    n = len(transitions) - 1
+    thetas = [(cmath.pi/2) * (i/n) for i in range(n + 1)]
+    global_phases = np.array([[cmath.exp(theta * 1j)] for theta in thetas])
     transitions *= global_phases[:, np.newaxis]
     return transitions
 
@@ -112,6 +110,25 @@ def test_qfa(
             test.assertAlmostEqual(qfa(w), target(k, w))
 
 
+def test_bilinearize_operation(
+    test: unittest.TestCase,
+    operation: Callable[[TQfa], TQfa],
+    get_qfa: Callable[[float], TQfa],
+    qfa_parameters: Iterable[float],
+    max_string_len: int,
+    *,
+    constraint: Callable[[TQfa], bool] = lambda x: True,
+) -> None:
+    for m in map(get_qfa, qfa_parameters):
+        ws = iterate_length_less_than_n_strings(m.alphabet, max_string_len)
+        n = operation(m)
+        test.assertTrue(constraint(n))
+        for w in ws:
+            last_superposition = n.process(n.string_to_tape(w)).superposition
+            probability = sum(n.observable[0] * last_superposition)
+            test.assertAlmostEqual(probability, m(w))
+
+
 def test_total_state_during_process(
     test: unittest.TestCase,
     get_qfa: Callable[[float], TQfa],
@@ -123,7 +140,7 @@ def test_total_state_during_process(
     for m in map(get_qfa, qfa_parameters):
         ws = iterate_length_n_strings(m.alphabet, string_len)
         for w in ws:
-            tape = [m.start_of_string] + w + [m.end_of_string]
+            tape = m.string_to_tape(w)
             total_state = TotalState.initial(m.states)
             for i, c in enumerate(tape):
                 total_state = m.step(total_state, c)
@@ -140,7 +157,6 @@ def test_unary_operation(
     *,
     get_preimage_str: Callable[[list[int]], list[int]] = lambda x: x,
     constraint: Callable[[TQfa], bool] = lambda x: True,
-
 ) -> None:
     """Test the unary operation qfa_op on the qfa.
 

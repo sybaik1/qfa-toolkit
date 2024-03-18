@@ -134,6 +134,11 @@ class QuantumFiniteAutomatonBase(abc.ABC):
             raise InvalidQuantumFiniteAutomatonError()
         return acceptance
 
+    @property
+    @abc.abstractmethod
+    def observable(self) -> Observable:
+        raise NotImplementedError()
+
     def process(
         self,
         w: list[int],
