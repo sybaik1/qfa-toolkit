@@ -65,19 +65,19 @@ class MeasureManyQuantumFiniteAutomatonLanguage(
         return self.__class__(qfa, strategy)
 
     @classmethod
-    def from_singleton(
+    def from_unary_singleton(
         cls,
-        n: int
+        k: int
     ) -> "MeasureManyQuantumFiniteAutomatonLanguage[NegOneSided]":
         acceptings = np.array([0, 0, 1, 0], dtype=bool)
         rejectings = np.array([0, 0, 0, 1], dtype=bool)
 
-        # TODO: make it as a parameter
+        # TODO: make it as a parameter or choose best of them
         theta_initial = math.pi / 4
         theta_sigma = math.pi / 3
 
-        c = math.sqrt(math.pow(2, 2*n + 1) / (math.pow(2, 2*n) + 1))
-        a = c * math.sqrt(2) / math.pow(2, n+1)
+        c = math.sqrt(math.pow(2, 2*k + 1) / (math.pow(2, 2*k) + 1))
+        a = c * math.sqrt(2) / math.pow(2, k+1)
         b = c * math.sqrt(2) / 2
 
         initial_transition = np.array([
@@ -106,7 +106,7 @@ class MeasureManyQuantumFiniteAutomatonLanguage(
         mmqfa = Mmqfa(transitions, acceptings, rejectings)
 
         # for m != n, mmqfa([1] * m) = 1 - 1/N
-        N = math.pow(2, 2*n + 3) + 8
+        N = math.pow(2, 2*k + 3) + 8
         epsilon = 1 - 1/(N+2)
         strategy = NegOneSided(epsilon)
 

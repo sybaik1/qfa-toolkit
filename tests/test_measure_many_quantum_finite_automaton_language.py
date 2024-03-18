@@ -67,11 +67,12 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
             lambda w: w not in l1, l2.enumerate_length_less_than_n(n))))
 
     def test_from_singleton(self):
-        for n in range(10):
-            qfl = Mmqfl.from_singleton(n)
-            for m in range(10):
-                w = [1] * m
-                self.assertEqual(w in qfl, m == n)
+        n = 10
+        for k in range(n):
+            qfl = Mmqfl.from_unary_singleton(k)
+            language = list(qfl.enumerate_length_less_than_n(2 * n))
+            target = [[1] * k]
+            self.assertEqual(language, target)
 
 
 if __name__ == '__main__':
