@@ -1,11 +1,12 @@
 import itertools
+import abc
 from typing import (Iterator, TypeVar, Generic, )
 
 from ..quantum_finite_automaton import QuantumFiniteAutomatonBase
 from ..recognition_strategy import RecognitionStrategy
 
-
-TQfl = TypeVar('TQfl', bound='QuantumFiniteAutomatonLanguage')
+TQfl = TypeVar('TQfl', bound='QuantumFiniteAutomatonLanguageBase')
+TQfa = TypeVar('TQfa', bound=QuantumFiniteAutomatonBase)
 TRecognitionStrategy = TypeVar(
     'TRecognitionStrategy', bound=RecognitionStrategy)
 
@@ -28,29 +29,32 @@ def _iterate_every_string(alphabet: int) -> Iterator[list[int]]:
     return itertools.chain.from_iterable(iterables)
 
 
-class QuantumFiniteAutomatonLanguage(Generic[TRecognitionStrategy]):
+class QuantumFiniteAutomatonLanguageBase(
+    abc.ABC, Generic[TQfa, TRecognitionStrategy]
+):
     def __init__(
         self,
-        qfa: QuantumFiniteAutomatonBase,
-        strategy: TRecognitionStrategy,
+        quantum_finite_automaton: TQfa,
+        strategy: TRecognitionStrategy
     ) -> None:
-        self.qfa = qfa
+        self.quantum_finite_automaton = quantum_finite_automaton
         self.strategy = strategy
 
     @property
     def alphabet(self) -> int:
-        return self.qfa.alphabet
+        return self.quantum_finite_automaton.alphabet
 
     @property
     def start_of_string(self) -> int:
-        return self.qfa.start_of_string
+        return self.quantum_finite_automaton.start_of_string
 
     @property
     def end_of_string(self) -> int:
-        return self.qfa.end_of_string
+        return self.quantum_finite_automaton.end_of_string
 
     def __contains__(self, w: list[int]) -> bool:
-        result = self.strategy(self.qfa(w))
+        probability = self.quantum_finite_automaton(w)
+        result = self.strategy(probability)
         if result == RecognitionStrategy.Result.INVALID:
             raise ValueError("Invalid result from recognition strategy")
         return result == RecognitionStrategy.Result.ACCEPT

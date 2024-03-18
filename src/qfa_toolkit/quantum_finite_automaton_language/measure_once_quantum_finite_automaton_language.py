@@ -1,7 +1,7 @@
 from typing import (Generic, TypeVar, )
 
-from .quantum_finite_automaton_language import (
-    QuantumFiniteAutomatonLanguage as Qfl)
+from .quantum_finite_automaton_language_base import (
+    QuantumFiniteAutomatonLanguageBase as Qfl)
 from ..quantum_finite_automaton import (
     MeasureOnceQuantumFiniteAutomaton as Moqfa)
 from ..recognition_strategy import RecognitionStrategy
@@ -12,9 +12,10 @@ TRecognitionStrategy = TypeVar(
     'TRecognitionStrategy', bound=RecognitionStrategy)
 
 
-class MeasureOnceQuantumFiniteAutomatonLanguage(Qfl[TRecognitionStrategy]):
-    def __init__(self, moqfa: Moqfa, strategy: TRecognitionStrategy) -> None:
-        super().__init__(moqfa, strategy)
+class MeasureOnceQuantumFiniteAutomatonLanguage(
+    Qfl[Moqfa, TRecognitionStrategy],
+    Generic[TRecognitionStrategy]
+):
 
     def concatenation(self, other: TMoqfl) -> TMoqfl:
         raise NotImplementedError()

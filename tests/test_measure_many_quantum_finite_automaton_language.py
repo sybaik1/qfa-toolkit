@@ -1,4 +1,3 @@
-import itertools
 import unittest
 
 from qfa_toolkit.recognition_strategy import IsolatedCutPoint
@@ -66,6 +65,13 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
             lambda w: w not in l2, l1.enumerate_length_less_than_n(n))))
         self.assertTrue(all(map(
             lambda w: w not in l1, l2.enumerate_length_less_than_n(n))))
+
+    def test_from_singleton(self):
+        for n in range(10):
+            qfl = Mmqfl.from_singleton(n)
+            for m in range(10):
+                w = [1] * m
+                self.assertEqual(w in qfl, m == n)
 
 
 if __name__ == '__main__':

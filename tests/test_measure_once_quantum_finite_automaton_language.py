@@ -6,7 +6,7 @@ from qfa_toolkit.recognition_strategy import PositiveOneSidedBoundedError
 
 from .utils import get_arbitrary_moqfa
 from qfa_toolkit.quantum_finite_automaton_language import (
-    QuantumFiniteAutomatonLanguage as Qfl)
+    QuantumFiniteAutomatonLanguageBase as Qfl)
 
 
 class TestMeasureOnceuantumFiniteAutomatonLanguage(unittest.TestCase):
