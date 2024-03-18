@@ -2,6 +2,7 @@ import math
 import functools
 import itertools
 import unittest
+from typing import (Callable, Iterable, )
 
 import numpy as np
 
@@ -12,8 +13,26 @@ from .utils import get_arbitrary_moqfa
 from .utils import test_qfa
 from .utils import test_unary_operation
 from .utils import test_binary_operation
-from .utils import test_bilinearize_operation
 from .utils import multiply_arbitrary_global_phase
+from .utils import iterate_length_less_than_n_strings
+
+
+def test_bilinearize_operation(
+    test: unittest.TestCase,
+    operation: Callable[[Moqfa], Moqfa],
+    get_qfa: Callable[[float], Moqfa],
+    qfa_parameters: Iterable[float],
+    max_string_len: int,
+    *,
+    constraint: Callable[[Moqfa], bool] = lambda x: True,
+) -> None:
+    for m in map(get_qfa, qfa_parameters):
+        ws = iterate_length_less_than_n_strings(m.alphabet, max_string_len)
+        n = operation(m)
+        test.assertTrue(constraint(n))
+        for w in ws:
+            probability = n.bilinearized_call(w)
+            test.assertAlmostEqual(probability, m(w))
 
 
 class TestMeasureOnceQuantumFiniteAutomaton(unittest.TestCase):

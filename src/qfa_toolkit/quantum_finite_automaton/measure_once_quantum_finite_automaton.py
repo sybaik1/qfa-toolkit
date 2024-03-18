@@ -49,6 +49,11 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         tape = self.string_to_tape(w)
         return self.process(tape).measure_by(self.observable).acceptance
 
+    def bilinearized_call(self, w: list[int]) -> float:
+        tape = self.string_to_tape(w)
+        last_superposition = self.process(tape).superposition
+        return sum(self.observable[0] * last_superposition)
+
     def word_transition(self, w: list[int]) -> Transition:
         transition = reduce(
             lambda transition, c: self.transitions[c] @ transition,
@@ -261,6 +266,9 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         accepting_states = stacked_accepting.T.reshape(2 * self.states)
         return self.__class__(transitions, accepting_states)
 
+    def bilinearize(self: TMoqfa) -> TMoqfa:
+        return self.to_bilinear()
+
     def to_bilinear(self: TMoqfa) -> TMoqfa:
         """Returns the (n^2)-size bilinear form of the quantum finite
         automaton.
@@ -294,7 +302,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         Cristopher Moore and James P. Crutchfield. 2000. Quantum Automata and
         Quantum Grammars. Theoretical Computer Science (TCS'00). """
 
-        return self.to_bilinear().to_real_valued()
+        return self.bilinearize().to_real_valued()
 
     def counter_example(self, other: TMoqfa) -> Optional[list[int]]:
         """Returns a counter example of the equivalence of the measure-once

@@ -110,25 +110,6 @@ def test_qfa(
             test.assertAlmostEqual(qfa(w), target(k, w))
 
 
-def test_bilinearize_operation(
-    test: unittest.TestCase,
-    operation: Callable[[TQfa], TQfa],
-    get_qfa: Callable[[float], TQfa],
-    qfa_parameters: Iterable[float],
-    max_string_len: int,
-    *,
-    constraint: Callable[[TQfa], bool] = lambda x: True,
-) -> None:
-    for m in map(get_qfa, qfa_parameters):
-        ws = iterate_length_less_than_n_strings(m.alphabet, max_string_len)
-        n = operation(m)
-        test.assertTrue(constraint(n))
-        for w in ws:
-            last_superposition = n.process(n.string_to_tape(w)).superposition
-            probability = sum(n.observable[0] * last_superposition)
-            test.assertAlmostEqual(probability, m(w))
-
-
 def test_total_state_during_process(
     test: unittest.TestCase,
     get_qfa: Callable[[float], TQfa],
