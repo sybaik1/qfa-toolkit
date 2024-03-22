@@ -64,7 +64,8 @@ class TotalState():
         acceptance = (self.acceptance + delta_acceptance).item()
         rejection = (self.rejection + delta_rejection).item()
 
-        return TotalState(superposition, acceptance, rejection)
+        total_state = TotalState(superposition, acceptance, rejection)
+        return total_state.normalized()
 
     def apply(self, unitary: npt.NDArray[np.cdouble]) -> 'TotalState':
         superposition = unitary @ self.superposition

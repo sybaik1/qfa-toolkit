@@ -1,5 +1,5 @@
 import math
-from typing import (TypeVar, Generic, )
+from typing import (TypeVar, Generic, Optional, )
 
 import numpy as np
 
@@ -67,29 +67,40 @@ class MeasureManyQuantumFiniteAutomatonLanguage(
     @classmethod
     def from_unary_singleton(
         cls,
-        k: int
+        k: int,
+        theta: Optional[float] = None,
+        phi: Optional[float] = None,
     ) -> "MeasureManyQuantumFiniteAutomatonLanguage[NegOneSided]":
         acceptings = np.array([0, 0, 1, 0], dtype=bool)
         rejectings = np.array([0, 0, 0, 1], dtype=bool)
 
-        # TODO: make it as a parameter or choose best of them
-        theta_initial = math.pi / 4
-        theta_sigma = math.pi / 3
+        if theta is None:
+            theta = math.pi / 4
+        if phi is None:
+            phi = math.pi / 3
 
-        c = math.sqrt(math.pow(2, 2*k + 1) / (math.pow(2, 2*k) + 1))
-        a = c * math.sqrt(2) / math.pow(2, k+1)
-        b = c * math.sqrt(2) / 2
+        cos_theta = math.cos(theta)
+        sin_theta = math.sin(theta)
+        cos_phi = math.cos(phi)
+        sin_phi = math.sin(phi)
+
+        c = (
+            math.pow(cos_phi, 2*k) * math.pow(cos_theta, 2)
+            + math.pow(sin_theta, 2)
+        )
+        a = math.pow(cos_phi, k) * cos_theta / math.sqrt(c)
+        b = sin_theta / math.sqrt(c)
 
         initial_transition = np.array([
-            [math.cos(theta_initial), -math.sin(theta_initial), 0, 0],
-            [math.sin(theta_initial), math.cos(theta_initial), 0, 0],
+            [cos_theta, -sin_theta, 0, 0],
+            [sin_theta, cos_theta, 0, 0],
             [0, 0, 1, 0],
             [0, 0, 0, 1]
         ], dtype=np.cdouble)
         sigma_transition = np.array([
-            [math.cos(theta_sigma), 0, -math.sin(theta_sigma), 0],
+            [cos_phi, 0, -sin_phi, 0],
             [0, 1, 0, 0],
-            [math.sin(theta_sigma), 0, math.cos(theta_sigma), 0],
+            [sin_phi, 0, cos_phi, 0],
             [0, 0, 0, 1]
         ], dtype=np.cdouble)
         final_transition = np.array([
@@ -103,11 +114,13 @@ class MeasureManyQuantumFiniteAutomatonLanguage(
             sigma_transition,
             final_transition
         ])
-        mmqfa = Mmqfa(transitions, acceptings, rejectings)
 
         # for m != n, mmqfa([1] * m) = 1 - 1/N
-        N = math.pow(2, 2*k + 3) + 8
-        epsilon = 1 - 1/(N+2)
+        mmqfa = Mmqfa(transitions, acceptings, rejectings)
+        c_reject_probability = math.pow(
+            cos_theta * sin_theta * math.pow(cos_phi, k) * (1-cos_phi), 2)
+        reject_probability = c_reject_probability / c
+        epsilon = 1 - reject_probability / 2
         strategy = NegOneSided(epsilon)
 
         return cls(mmqfa, strategy)  # type: ignore
