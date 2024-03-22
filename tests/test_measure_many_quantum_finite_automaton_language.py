@@ -72,7 +72,7 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
         for k in range(n):
             for theta in map(lambda e: math.pi / 8 * e, range(1, 4)):
                 for phi in map(lambda e: math.pi / 8 * e, range(1, 4)):
-                    qfl = Mmqfl.from_unary_singleton(k, theta, phi)
+                    qfl = Mmqfl.from_unary_singleton(k, (theta, phi))
                     language = list(qfl.enumerate_length_less_than_n(2 * n))
                     target = [[1] * k]
                     self.assertEqual(language, target)

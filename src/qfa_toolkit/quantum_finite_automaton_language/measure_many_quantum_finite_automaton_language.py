@@ -65,20 +65,22 @@ class MeasureManyQuantumFiniteAutomatonLanguage(
         return self.__class__(qfa, strategy)
 
     @classmethod
+    def _find_unary_singleton_parameters(cls, k: int) -> tuple[float, float]:
+        raise NotImplementedError()
+
+    @classmethod
     def from_unary_singleton(
         cls,
         k: int,
-        theta: Optional[float] = None,
-        phi: Optional[float] = None,
+        params: Optional[tuple[float, float]] = None
     ) -> "MeasureManyQuantumFiniteAutomatonLanguage[NegOneSided]":
+        if params is None:
+            params = cls._find_unary_singleton_parameters(k)
+
         acceptings = np.array([0, 0, 1, 0], dtype=bool)
         rejectings = np.array([0, 0, 0, 1], dtype=bool)
 
-        if theta is None:
-            theta = math.pi / 4
-        if phi is None:
-            phi = math.pi / 3
-
+        theta, phi = params
         cos_theta = math.cos(theta)
         sin_theta = math.sin(theta)
         cos_phi = math.cos(phi)
