@@ -77,6 +77,14 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
                     target = [[1] * k]
                     self.assertEqual(language, target)
 
+    def test_from_singleton_without_params(self):
+        n = 10
+        for k in range(n):
+            qfl = Mmqfl.from_unary_singleton(k)
+            language = list(qfl.enumerate_length_less_than_n(2 * n))
+            target = [[1] * k]
+            self.assertEqual(language, target)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,5 @@
 import math
+from scipy.optimize import newton  # type: ignore
 from typing import (TypeVar, Generic, Optional, )
 
 import numpy as np
@@ -66,7 +67,15 @@ class MeasureManyQuantumFiniteAutomatonLanguage(
 
     @classmethod
     def _find_unary_singleton_parameters(cls, k: int) -> tuple[float, float]:
-        raise NotImplementedError()
+        cos_phi = newton(
+            lambda x: math.pow(x, k+1)+(k+1)*x-k,
+            x0=0.5,
+            tol=1e-10
+        )
+        tan_theta = math.sqrt(math.pow(cos_phi, k))
+        phi = math.acos(cos_phi)
+        theta = math.atan(tan_theta)
+        return theta, phi
 
     @classmethod
     def from_unary_singleton(
