@@ -5,10 +5,10 @@ from typing import (Iterator, TypeVar, Generic, )
 from ..quantum_finite_automaton import QuantumFiniteAutomatonBase
 from ..recognition_strategy import RecognitionStrategy
 
-TQfl = TypeVar('TQfl', bound='QuantumFiniteAutomatonLanguageBase')
-TQfa = TypeVar('TQfa', bound=QuantumFiniteAutomatonBase)
-TRecognitionStrategy = TypeVar(
-    'TRecognitionStrategy', bound=RecognitionStrategy)
+QflT = TypeVar('QflT', bound='QuantumFiniteAutomatonLanguageBase')
+QfaT = TypeVar('QfaT', bound=QuantumFiniteAutomatonBase)
+RecognitionStrategyT = TypeVar(
+    'RecognitionStrategyT', bound=RecognitionStrategy)
 
 
 def _iterate_length_n_strings(alphabet: int, n: int) -> Iterator[list[int]]:
@@ -30,12 +30,12 @@ def _iterate_every_string(alphabet: int) -> Iterator[list[int]]:
 
 
 class QuantumFiniteAutomatonLanguageBase(
-    abc.ABC, Generic[TQfa, TRecognitionStrategy]
+    abc.ABC, Generic[QfaT, RecognitionStrategyT]
 ):
     def __init__(
         self,
-        quantum_finite_automaton: TQfa,
-        strategy: TRecognitionStrategy
+        quantum_finite_automaton: QfaT,
+        strategy: RecognitionStrategyT
     ) -> None:
         self.quantum_finite_automaton = quantum_finite_automaton
         self.strategy = strategy
@@ -72,32 +72,32 @@ class QuantumFiniteAutomatonLanguageBase(
         every_string = _iterate_every_string(self.alphabet)
         return filter(lambda w: w in self, every_string)
 
-    def concatination(self: TQfl, other: TQfl) -> TQfl:
+    def concatination(self: QflT, other: QflT) -> QflT:
         raise NotImplementedError()
 
-    def union(self: TQfl, other: TQfl) -> TQfl:
+    def union(self: QflT, other: QflT) -> QflT:
         raise NotImplementedError()
 
-    def intersection(self: TQfl, other: TQfl) -> TQfl:
+    def intersection(self: QflT, other: QflT) -> QflT:
         raise NotImplementedError()
 
-    def __invert__(self: TQfl) -> TQfl:
+    def __invert__(self: QflT) -> QflT:
         return self.complement()
 
-    def complement(self: TQfl) -> TQfl:
+    def complement(self: QflT) -> QflT:
         raise NotImplementedError()
 
-    def difference(self: TQfl, other: TQfl) -> TQfl:
+    def difference(self: QflT, other: QflT) -> QflT:
         raise NotImplementedError()
 
-    def equivalence(self: TQfl, other: TQfl) -> bool:
+    def equivalence(self: QflT, other: QflT) -> bool:
         raise NotImplementedError()
 
-    def kleene_star(self: TQfl) -> TQfl:
+    def kleene_star(self: QflT) -> QflT:
         raise NotImplementedError()
 
-    def reverse(self: TQfl) -> TQfl:
+    def reverse(self: QflT) -> QflT:
         raise NotImplementedError()
 
-    def is_empty(self: TQfl) -> bool:
+    def is_empty(self: QflT) -> bool:
         raise NotImplementedError()

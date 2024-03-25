@@ -1,5 +1,6 @@
 import unittest
 import math
+from itertools import combinations
 
 from qfa_toolkit.recognition_strategy import IsolatedCutPoint
 from qfa_toolkit.recognition_strategy import NegativeOneSidedBoundedError
@@ -67,7 +68,7 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
         self.assertTrue(all(map(
             lambda w: w not in l1, l2.enumerate_length_less_than_n(n))))
 
-    def test_from_singleton(self):
+    def test_from_unary_singleton(self):
         n = 10
         for k in range(n):
             for theta in map(lambda e: math.pi / 8 * e, range(1, 4)):
@@ -77,12 +78,20 @@ class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
                     target = [[1] * k]
                     self.assertEqual(language, target)
 
-    def test_from_singleton_without_params(self):
+    def test_from_unary_singleton_without_params(self):
         n = 10
         for k in range(n):
             qfl = Mmqfl.from_unary_singleton(k)
             language = list(qfl.enumerate_length_less_than_n(2 * n))
             target = [[1] * k]
+            self.assertEqual(language, target)
+
+    def test_from_unary_finite(self):
+        n = 5
+        for ks in combinations(range(n), 3):
+            qfl = Mmqfl.from_unary_finite(ks)
+            language = list(qfl.enumerate_length_less_than_n(2 * n))
+            target = [[1] * k for k in ks]
             self.assertEqual(language, target)
 
 

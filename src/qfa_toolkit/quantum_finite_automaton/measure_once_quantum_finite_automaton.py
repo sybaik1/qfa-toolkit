@@ -14,7 +14,7 @@ from ..quantum_finite_automaton.measure_many_quantum_finite_automaton import (
 from .utils import direct_sum
 from .utils import get_real_valued_transition
 
-TMoqfa = TypeVar('TMoqfa', bound='MeasureOnceQuantumFiniteAutomaton')
+MoqfaT = TypeVar('MoqfaT', bound='MeasureOnceQuantumFiniteAutomaton')
 
 
 class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
@@ -61,10 +61,10 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         )
         return transition
 
-    def concatenation(self, other: TMoqfa) -> TMoqfa:
+    def concatenation(self, other: MoqfaT) -> MoqfaT:
         raise NotImplementedError()
 
-    def union(self: TMoqfa, other: TMoqfa) -> TMoqfa:
+    def union(self: MoqfaT, other: MoqfaT) -> MoqfaT:
         """Returns the mn-size union of the two m- and n-size measure-once
         quantum finite automata.
 
@@ -76,7 +76,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """
         return ~(~self & ~other)
 
-    def intersection(self: TMoqfa, other: TMoqfa) -> TMoqfa:
+    def intersection(self: MoqfaT, other: MoqfaT) -> MoqfaT:
         """Returns the mn-size intersection of the measure-once quantum finite
         automata.
 
@@ -99,7 +99,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         return self.__class__(transitions, accepting_states)
 
-    def complement(self: TMoqfa) -> TMoqfa:
+    def complement(self: MoqfaT) -> MoqfaT:
         """Returns the complement of the measure-once quantum finite automaton.
 
         For a quantum finite automaton M, the complement is defined as the
@@ -112,10 +112,10 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         return self.__class__(self.transitions, self.rejecting_states)
 
     def linear_combination(
-        self: TMoqfa,
-        other: TMoqfa,
+        self: MoqfaT,
+        other: MoqfaT,
         c: float = 0.5
-    ) -> TMoqfa:
+    ) -> MoqfaT:
         """Returns the (n+m)-size linear combination of the two n- and m-size
         measure-once quantum finite automata.
 
@@ -150,7 +150,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             (self.accepting_states, other.accepting_states))
         return self.__class__(transitions, accepting_states)
 
-    def word_quotient(self: TMoqfa, w: list[int]) -> TMoqfa:
+    def word_quotient(self: MoqfaT, w: list[int]) -> MoqfaT:
         """Returns the word quotient of the measure-once quantum finite
         automaton.
 
@@ -169,7 +169,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             self.word_transition(w) @ self.initial_transition)
         return self.__class__(transitions, self.accepting_states)
 
-    def inverse_homomorphism(self: TMoqfa, phi: list[list[int]]) -> TMoqfa:
+    def inverse_homomorphism(self: MoqfaT, phi: list[list[int]]) -> MoqfaT:
         """Returns the inverse homomorphism of the measure-once quantum finite
         automaton.
 
@@ -198,13 +198,13 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         )
         return self.__class__(transitions, self.accepting_states)
 
-    def difference(self, other: TMoqfa) -> TMoqfa:
+    def difference(self, other: MoqfaT) -> MoqfaT:
         raise NotImplementedError()
 
     def to_measure_many_quantum_finite_automaton(self) -> Mmqfa:
         raise NotImplementedError()
 
-    def to_without_final_transition(self: TMoqfa) -> TMoqfa:
+    def to_without_final_transition(self: MoqfaT) -> MoqfaT:
         """Returns the quantum finite automaton without the final transition.
 
         Alex Brodsky, and Nicholas Pippenger. 2002. Characterizations of 1-Way
@@ -227,7 +227,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             [initial_transition] + updated_transitions + [final_transition])
         return self.__class__(transitions, self.accepting_states)
 
-    def to_without_initial_transition(self: TMoqfa) -> TMoqfa:
+    def to_without_initial_transition(self: MoqfaT) -> MoqfaT:
         """Returns the quantum finite automaton without the initial transition.
 
         Alex Brodsky, and Nicholas Pippenger. 2002. Characterizations of 1-Way
@@ -250,7 +250,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             [initial_transition] + updated_transitions + [final_transition])
         return self.__class__(transitions, self.accepting_states)
 
-    def to_real_valued(self: TMoqfa) -> TMoqfa:
+    def to_real_valued(self: MoqfaT) -> MoqfaT:
         """Returns the 2n-size real-valued form of the quantum finite
         automaton.
 
@@ -266,10 +266,10 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         accepting_states = stacked_accepting.T.reshape(2 * self.states)
         return self.__class__(transitions, accepting_states)
 
-    def bilinearize(self: TMoqfa) -> TMoqfa:
+    def bilinearize(self: MoqfaT) -> MoqfaT:
         return self.to_bilinear()
 
-    def to_bilinear(self: TMoqfa) -> TMoqfa:
+    def to_bilinear(self: MoqfaT) -> MoqfaT:
         """Returns the (n^2)-size bilinear form of the quantum finite
         automaton.
 
@@ -290,7 +290,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         accepting_states[[i * i for i in indices]] = True
         return self.__class__(bilinear_transitions, accepting_states)
 
-    def to_stochastic(self: TMoqfa) -> TMoqfa:
+    def to_stochastic(self: MoqfaT) -> MoqfaT:
         """Returns the 2(n^2)-size stochastic form of the quantum
         finite automaton.
 
@@ -304,7 +304,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         return self.bilinearize().to_real_valued()
 
-    def counter_example(self, other: TMoqfa) -> Optional[list[int]]:
+    def counter_example(self, other: MoqfaT) -> Optional[list[int]]:
         """Returns a counter example of the equivalence of the measure-once
         quantum finite automaton.
 
@@ -355,7 +355,7 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
                 return w
         return None
 
-    def equivalence(self, other: TMoqfa) -> bool:
+    def equivalence(self, other: MoqfaT) -> bool:
         """Returns whether the two measure-once quantum finite automata are
         equal.
 
@@ -366,19 +366,19 @@ class MeasureOnceQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """
         return self.counter_example(other) is None
 
-    def minimize(self: TMoqfa) -> TMoqfa:
+    def minimize(self: MoqfaT) -> MoqfaT:
         raise NotImplementedError()
 
-    def symmetric_difference(self, other: TMoqfa) -> TMoqfa:
+    def symmetric_difference(self, other: MoqfaT) -> MoqfaT:
         raise NotImplementedError()
 
-    def kleene_star(self: TMoqfa) -> TMoqfa:
+    def kleene_star(self: MoqfaT) -> MoqfaT:
         raise NotImplementedError()
 
-    def kleene_plus(self: TMoqfa) -> TMoqfa:
+    def kleene_plus(self: MoqfaT) -> MoqfaT:
         raise NotImplementedError()
 
-    def reverse(self: TMoqfa) -> TMoqfa:
+    def reverse(self: MoqfaT) -> MoqfaT:
         raise NotImplementedError()
 
     def is_empty(self) -> bool:

@@ -7,21 +7,21 @@ from ..quantum_finite_automaton import (
 from ..recognition_strategy import RecognitionStrategy
 
 
-TMoqfl = TypeVar('TMoqfl', bound='MeasureOnceQuantumFiniteAutomatonLanguage')
-TRecognitionStrategy = TypeVar(
-    'TRecognitionStrategy', bound=RecognitionStrategy)
+MoqflT = TypeVar('MoqflT', bound='MeasureOnceQuantumFiniteAutomatonLanguage')
+RecognitionStrategyT = TypeVar(
+    'RecognitionStrategyT', bound=RecognitionStrategy)
 
 
 class MeasureOnceQuantumFiniteAutomatonLanguage(
-    Qfl[Moqfa, TRecognitionStrategy],
-    Generic[TRecognitionStrategy]
+    Qfl[Moqfa, RecognitionStrategyT],
+    Generic[RecognitionStrategyT]
 ):
 
-    def concatenation(self, other: TMoqfl) -> TMoqfl:
+    def concatenation(self, other: MoqflT) -> MoqflT:
         raise NotImplementedError()
 
-    def union(self, other: TMoqfl) -> TMoqfl:
+    def union(self, other: MoqflT) -> MoqflT:
         raise NotImplementedError()
 
-    def intersection(self, other: TMoqfl) -> TMoqfl:
+    def intersection(self, other: MoqflT) -> MoqflT:
         raise NotImplementedError()

@@ -11,7 +11,7 @@ from .quantum_finite_automaton_base import Transition
 from .utils import direct_sum
 from .utils import get_real_valued_transition
 
-TMmqfa = TypeVar('TMmqfa', bound='MeasureManyQuantumFiniteAutomaton')
+MmqfaT = TypeVar('MmqfaT', bound='MeasureManyQuantumFiniteAutomaton')
 
 
 class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
@@ -60,12 +60,12 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         tape = self.string_to_tape(w)
         return self.process(tape).acceptance
 
-    def concatenation(self, other: TMmqfa) -> TMmqfa:
+    def concatenation(self, other: MmqfaT) -> MmqfaT:
         if self.alphabet != other.alphabet:
             raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
 
-    def union(self: TMmqfa, other: TMmqfa) -> TMmqfa:
+    def union(self: MmqfaT, other: MmqfaT) -> MmqfaT:
         """Returns the union of two measure-many quantum finite automata.
 
         For a quantum finite automaton M and N, the union is defined as the
@@ -88,7 +88,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         return ~((~self) & (~other))
 
-    def intersection(self: TMmqfa, other: TMmqfa) -> TMmqfa:
+    def intersection(self: MmqfaT, other: MmqfaT) -> MmqfaT:
         """Returns the intersection of two measure-many quantum finite
         automata.
 
@@ -122,7 +122,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         rejecting_states = halting_states & ~accepting_states
         return self.__class__(transition, accepting_states, rejecting_states)
 
-    def complement(self: TMmqfa) -> TMmqfa:
+    def complement(self: MmqfaT) -> MmqfaT:
         """Returns the complement of the quantum finite automaton.
 
         For a quantum finite automaton M, the complement is defined as the
@@ -135,7 +135,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         return self.__class__(
             self.transitions, self.rejecting_states, self.accepting_states)
 
-    def linear_combination(self: TMmqfa, other: TMmqfa, c: float) -> TMmqfa:
+    def linear_combination(self: MmqfaT, other: MmqfaT, c: float) -> MmqfaT:
         """Returns the linear combination of two MMQFA.
 
         For a quantum finite automaton M, N and 0 <= c <= 1, the linear
@@ -173,15 +173,15 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             (self.rejecting_states, other.rejecting_states))
         return self.__class__(transition, accepting_states, rejecting_states)
 
-    def word_quotient(self: TMmqfa, w: list[int]) -> TMmqfa:
+    def word_quotient(self: MmqfaT, w: list[int]) -> MmqfaT:
         raise NotImplementedError()
 
-    def difference(self, other: TMmqfa) -> TMmqfa:
+    def difference(self, other: MmqfaT) -> MmqfaT:
         if self.alphabet != other.alphabet:
             raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
 
-    def equivalence(self, other: TMmqfa) -> bool:
+    def equivalence(self, other: MmqfaT) -> bool:
         """Returns whether the measure-many quantum finite automaton is equal.
 
         For quantum finite automata M and M', the equivalence is defined as
@@ -192,7 +192,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """
         return self.counter_example(other) is None
 
-    def counter_example(self, other: TMmqfa) -> Optional[list[int]]:
+    def counter_example(self, other: MmqfaT) -> Optional[list[int]]:
         """Returns a counter example of the equivalence of the measure-many
         quantum finite automaton.
 
@@ -203,21 +203,21 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
 
-    def minimize(self: TMmqfa) -> TMmqfa:
+    def minimize(self: MmqfaT) -> MmqfaT:
         raise NotImplementedError()
 
-    def symmetric_difference(self, other: TMmqfa) -> TMmqfa:
+    def symmetric_difference(self, other: MmqfaT) -> MmqfaT:
         if self.alphabet != other.alphabet:
             raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
 
-    def kleene_star(self: TMmqfa) -> TMmqfa:
+    def kleene_star(self: MmqfaT) -> MmqfaT:
         raise NotImplementedError()
 
-    def kleene_plus(self: TMmqfa) -> TMmqfa:
+    def kleene_plus(self: MmqfaT) -> MmqfaT:
         raise NotImplementedError()
 
-    def reverse(self: TMmqfa) -> TMmqfa:
+    def reverse(self: MmqfaT) -> MmqfaT:
         raise NotImplementedError()
 
     def is_empty(self) -> bool:
@@ -251,7 +251,7 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         connected = np.linalg.matrix_power(adjacency, self.states)[0]
         return not any(self.rejecting_states & connected)
 
-    def to_real_valued(self: TMmqfa) -> TMmqfa:
+    def to_real_valued(self: MmqfaT) -> MmqfaT:
         transitions = np.stack([
             get_real_valued_transition(transition)
             for transition in self.transitions

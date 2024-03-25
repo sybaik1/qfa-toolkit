@@ -92,12 +92,12 @@ def get_arbitrary_mmqfa(r: float) -> Mmqfa:
     return Mmqfa(transitions, acceptings, rejectings)
 
 
-TQfa = TypeVar('TQfa', bound=QfaBase)
+QfaT = TypeVar('QfaT', bound=QfaBase)
 
 
 def test_qfa(
     test: unittest.TestCase,
-    get_qfa: Callable[[float], TQfa],
+    get_qfa: Callable[[float], QfaT],
     target: Callable[[float, list[int]], float],
     qfa_parameters: Iterable[float],
     max_string_len: int
@@ -112,7 +112,7 @@ def test_qfa(
 
 def test_total_state_during_process(
     test: unittest.TestCase,
-    get_qfa: Callable[[float], TQfa],
+    get_qfa: Callable[[float], QfaT],
     qfa_parameters: Iterable[float],
     string_len: int,
     constraint: Callable[[list[int], int, TotalState], bool]
@@ -130,14 +130,14 @@ def test_total_state_during_process(
 
 def test_unary_operation(
     test: unittest.TestCase,
-    operation: Callable[[TQfa], TQfa],
+    operation: Callable[[QfaT], QfaT],
     get_target_prob: Callable[[float], float],
-    get_qfa: Callable[[float], TQfa],
+    get_qfa: Callable[[float], QfaT],
     qfa_parameters: Iterable[float],
     max_string_len: int,
     *,
     get_preimage_str: Callable[[list[int]], list[int]] = lambda x: x,
-    constraint: Callable[[TQfa], bool] = lambda x: True,
+    constraint: Callable[[QfaT], bool] = lambda x: True,
 ) -> None:
     """Test the unary operation qfa_op on the qfa.
 
@@ -155,17 +155,17 @@ def test_unary_operation(
 
 def test_binary_operation(
     test: unittest.TestCase,
-    operation: Callable[[TQfa, TQfa], TQfa],
+    operation: Callable[[QfaT, QfaT], QfaT],
     get_target_prob: Callable[[float, float], float],
-    get_qfa_1: Callable[[float], TQfa],
-    get_qfa_2: Callable[[float], TQfa],
+    get_qfa_1: Callable[[float], QfaT],
+    get_qfa_2: Callable[[float], QfaT],
     qfa_parameters_1: Iterable[float],
     qfa_parameters_2: Iterable[float],
     max_string_len: int,
     *,
     get_preimage_pair:
     Callable[[list[int]], tuple[list[int], list[int]]] = lambda x: (x, x),
-    constraint: Callable[[TQfa], bool] = lambda x: True,
+    constraint: Callable[[QfaT], bool] = lambda x: True,
 ) -> None:
     """Test the binary operation qfa_op on the qfa.
 

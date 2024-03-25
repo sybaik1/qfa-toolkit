@@ -85,7 +85,7 @@ class TotalState():
         return TotalState(superposition, acceptance, rejection)
 
 
-QfaType = TypeVar('QfaType', bound='QuantumFiniteAutomatonBase')
+QfaT = TypeVar('QfaT', bound='QuantumFiniteAutomatonBase')
 
 
 class QuantumFiniteAutomatonBase(abc.ABC):
@@ -154,17 +154,17 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def concatenation(self: QfaType, other: QfaType) -> QfaType:
+    def concatenation(self: QfaT, other: QfaT) -> QfaT:
         raise NotImplementedError()
 
-    def __concat__(self: QfaType, other: QfaType) -> QfaType:
+    def __concat__(self: QfaT, other: QfaT) -> QfaT:
         return self.concatenation(other)
 
     @abc.abstractmethod
-    def union(self: QfaType, other: QfaType) -> QfaType:
+    def union(self: QfaT, other: QfaT) -> QfaT:
         raise NotImplementedError()
 
-    def __or__(self: QfaType, other: QfaType) -> QfaType:
+    def __or__(self: QfaT, other: QfaT) -> QfaT:
         """Returns the union of the quantum finite automaton.
 
         See union() for details.
@@ -172,17 +172,17 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         return self.union(other)
 
     @abc.abstractmethod
-    def intersection(self: QfaType, other: QfaType) -> QfaType:
+    def intersection(self: QfaT, other: QfaT) -> QfaT:
         raise NotImplementedError()
 
-    def __and__(self: QfaType, other: QfaType) -> QfaType:
+    def __and__(self: QfaT, other: QfaT) -> QfaT:
         """Returns the intersection of the quantum finite automaton.
 
         See intersection() for details.
         """
         return self.intersection(other)
 
-    def __multiply__(self: QfaType, other: QfaType) -> QfaType:
+    def __multiply__(self: QfaT, other: QfaT) -> QfaT:
         """Returns the intersection of the quantum finite automaton.
 
         See intersection() for details.
@@ -190,10 +190,10 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         return self.intersection(other)
 
     @abc.abstractmethod
-    def complement(self: QfaType) -> QfaType:
+    def complement(self: QfaT) -> QfaT:
         raise NotImplementedError()
 
-    def __invert__(self: QfaType) -> QfaType:
+    def __invert__(self: QfaT) -> QfaT:
         """Returns the complement of the quantum finite automaton.
 
         See complement() for details.
@@ -201,41 +201,41 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         return self.complement()
 
     @abc.abstractmethod
-    def difference(self: QfaType, other: QfaType) -> QfaType:
+    def difference(self: QfaT, other: QfaT) -> QfaT:
         raise NotImplementedError()
 
-    def __sub__(self: QfaType, other: QfaType) -> QfaType:
+    def __sub__(self: QfaT, other: QfaT) -> QfaT:
         return self.difference(other)
 
     @abc.abstractmethod
-    def equivalence(self: QfaType, other: QfaType) -> bool:
+    def equivalence(self: QfaT, other: QfaT) -> bool:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def minimize(self: QfaType) -> QfaType:
+    def minimize(self: QfaT) -> QfaT:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def symmetric_difference(self: QfaType, other: QfaType) -> QfaType:
+    def symmetric_difference(self: QfaT, other: QfaT) -> QfaT:
         raise NotImplementedError()
 
-    def __xor__(self: QfaType, other: QfaType) -> QfaType:
+    def __xor__(self: QfaT, other: QfaT) -> QfaT:
         return self.symmetric_difference(other)
 
     @abc.abstractmethod
-    def kleene_star(self: QfaType) -> QfaType:
+    def kleene_star(self: QfaT) -> QfaT:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def kleene_plus(self: QfaType) -> QfaType:
+    def kleene_plus(self: QfaT) -> QfaT:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def reverse(self: QfaType) -> QfaType:
+    def reverse(self: QfaT) -> QfaT:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def is_empty(self: QfaType) -> bool:
+    def is_empty(self: QfaT) -> bool:
         raise NotImplementedError()
 
     def _string_to_number(self, string: list[int]) -> int:
