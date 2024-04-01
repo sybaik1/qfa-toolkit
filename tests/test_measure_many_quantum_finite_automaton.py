@@ -68,7 +68,7 @@ class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
                 return x.linear_combination(y, c)
             test_binary_operation(
                 self, lin_comb, lambda x, y: c*x + (1-c)*y,
-                self.get_mmqfa, self.get_mmqfa,
+                self.get_mmqfa, self.get_co_end_decisive,
                 self.qfa_parameters, self.qfa_parameters, self.max_string_len
             )
 

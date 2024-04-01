@@ -13,7 +13,6 @@ from ..recognition_strategy import PositiveOneSidedBoundedError as PosOneSided
 from ..recognition_strategy import RecognitionStrategy
 from ..recognition_strategy import NegativeOneSidedBoundedError as NegOneSided
 from ..recognition_strategy import IsolatedCutPoint
-from ..recognition_strategy import NegativeOneSidedBoundedError
 
 MmqflT = TypeVar('MmqflT', bound='MeasureManyQuantumFiniteAutomatonLanguage')
 RecognitionStrategyT = TypeVar(
@@ -42,7 +41,7 @@ class MeasureManyQuantumFiniteAutomatonLanguage(
             isinstance(self.strategy, PosOneSided)
             and isinstance(other.strategy, PosOneSided)
         ):
-            epsilon = self.strategy.epsilon * other.strategy.epsilon
+            epsilon = min(self.strategy.epsilon, other.strategy.epsilon)
             strategy = PosOneSided(epsilon)
         else:
             raise NotImplementedError()
@@ -54,13 +53,13 @@ class MeasureManyQuantumFiniteAutomatonLanguage(
     def union(self: MmqflT, other: MmqflT) -> MmqflT:
         qfa = self.quantum_finite_automaton | other.quantum_finite_automaton
         if (
-            isinstance(self.strategy, NegativeOneSidedBoundedError)
-            and isinstance(other.strategy, NegativeOneSidedBoundedError)
+            isinstance(self.strategy, NegOneSided)
+            and isinstance(other.strategy, NegOneSided)
         ):
             one_minus_epsilon = (
                 (1 - self.strategy.epsilon) * (1 - other.strategy.epsilon))
             epsilon = 1 - one_minus_epsilon
-            strategy = NegativeOneSidedBoundedError(epsilon)
+            strategy = NegOneSided(epsilon)
         else:
             raise NotImplementedError()
         return self.__class__(qfa, strategy)
@@ -78,14 +77,13 @@ class MeasureManyQuantumFiniteAutomatonLanguage(
 
     @classmethod
     def _find_unary_singleton_parameters(cls, k: int) -> tuple[float, float]:
-        cos_phi = newton(
+        omega = newton(
             lambda x: math.pow(x, k+1)+(k+1)*x-k,
             x0=0.5,
             tol=1e-10
         )
-        tan_theta = math.sqrt(math.pow(cos_phi, k))
-        phi = math.acos(cos_phi)
-        theta = math.atan(tan_theta)
+        phi = math.acos(omega)
+        theta = math.atan(math.sqrt(math.pow(omega, k)))
         return theta, phi
 
     @classmethod
