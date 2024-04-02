@@ -38,13 +38,13 @@ def get_transition_from_initial_to_superposition(
         assert np.isclose(np.linalg.norm(superposition), 1)
 
     if np.count_nonzero(superposition) == 1:
-        i = np.nonzero(superposition)[0]
+        i = np.nonzero(superposition)[0][0]
         states = len(superposition)
         transition = np.eye(states, dtype=np.cdouble)
         transition[0][0] = 0
         transition[0][i] = 1
-        transition[i][0] = 1
         transition[i][i] = 0
+        transition[i][0] = 1
         return transition
 
     states_1 = len(superposition) // 2

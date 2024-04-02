@@ -7,6 +7,8 @@ from qfa_toolkit.recognition_strategy import PositiveOneSidedBoundedError
 from .utils import get_arbitrary_moqfa
 from qfa_toolkit.quantum_finite_automaton_language import (
     QuantumFiniteAutomatonLanguageBase as Qfl)
+from qfa_toolkit.quantum_finite_automaton_language import (
+    MeasureOnceQuantumFiniteAutomatonLanguage as Moqfl)
 
 
 class TestMeasureOnceuantumFiniteAutomatonLanguage(unittest.TestCase):
@@ -51,6 +53,16 @@ class TestMeasureOnceuantumFiniteAutomatonLanguage(unittest.TestCase):
         self.assertNotIn([1, 1], lang_invalid)
         self.assertRaises(ValueError, lambda: [1, 1, 1] in lang_invalid)
         self.assertIn([1, 1, 1, 1], lang_invalid)
+
+    def test_modulo_prime(self):
+        for p in [23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]:
+            moqfl = Moqfl.from_modulo_prime(p)
+            for j in range(2*p):
+                w = [1] * j
+                if j % p == 0:
+                    self.assertIn(w, moqfl)
+                else:
+                    self.assertNotIn(w, moqfl)
 
 
 if __name__ == '__main__':
