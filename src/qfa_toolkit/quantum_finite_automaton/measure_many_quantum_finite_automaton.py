@@ -158,8 +158,8 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         initial_transition = np.eye(states)
         initial_transition[0][0] = d
         initial_transition[0][self.states] = f
-        initial_transition[self.states][0] = -f
-        initial_transition[self.states][self.states] = d
+        initial_transition[self.states][0] = f
+        initial_transition[self.states][self.states] = -d
 
         transition = np.stack([
             direct_sum(u, v)

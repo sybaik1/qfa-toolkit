@@ -27,3 +27,40 @@ def get_real_valued_transition(
     stacked = stacked.transpose((2, 0, 3, 1))
     stacked = stacked.reshape((2 * len(transition), 2 * len(transition)))
     return stacked
+
+
+def get_transition_from_initial_to_superposition(
+    superposition: npt.NDArray[np.cdouble],
+    *,
+    _normalized: bool = True
+) -> npt.NDArray[np.cdouble]:
+    if _normalized:
+        assert np.isclose(np.linalg.norm(superposition), 1)
+
+    if len(superposition) == 1:
+        return np.array([[superposition[0]]])
+
+    if len(superposition) == 2:
+        return np.array([
+            [superposition[0], superposition[1]],
+            [superposition[1], -superposition[0]]
+        ])
+
+    states_1 = len(superposition) // 2
+
+    superposition_1 = superposition[:states_1]
+    superposition_2 = superposition[states_1:]
+
+    length_1 = np.linalg.norm(superposition_1)
+    length_2 = np.linalg.norm(superposition_2)
+
+    transition_1 = get_transition_from_initial_to_superposition(superposition_1 / length_1)
+    transition_2 = get_transition_from_initial_to_superposition(superposition_2 / length_2)
+
+    initial_transition = np.eye(len(superposition))
+    initial_transition[0][0] = length_1
+    initial_transition[0][states_1] = length_2
+    initial_transition[states_1][0] = length_2
+    initial_transition[states_1][states_1] = -length_1
+
+    return direct_sum(transition_1, transition_2) @ initial_transition
