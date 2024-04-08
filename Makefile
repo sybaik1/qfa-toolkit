@@ -24,9 +24,10 @@ mypy: $(VENV)
 vim: $(VENV) | .git
 	. $(VENV)/bin/activate; vim $$(git ls-files)
 
-.git:
-	git init
-
+.PHONY: jupyter
+jupyter: $(VENV)
+	$(VENV)/bin/jupyter notebook \
+		--ip=0.0.0.0 --port=50000 --no-browser
 
 .PHONY: clean clean-venv clean-build clean-pyc
 clean: clean-venv clean-build clean-pyc

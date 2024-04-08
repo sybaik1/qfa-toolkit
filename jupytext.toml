@@ -1,0 +1,3 @@
+[formats]
+"benchmark/notebooks/" = "ipynb"
+"benchmark/scripts/" = "py:percent"
