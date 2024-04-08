@@ -37,7 +37,7 @@ class QiskitQuantumFiniteAutomaton(abc.ABC):
 
     @property
     def undefined_states(self) -> set[int]:
-        return set(range(self.size ** 2)) - self.defined_states
+        return set(range(2 ** self.size)) - self.defined_states
 
     # mapping from qiskit states to qfa states
     @property
@@ -57,8 +57,8 @@ class QiskitQuantumFiniteAutomaton(abc.ABC):
     def _transition_to_circuit(self, transition, character: str):
         # make unitary matrix to be a square matrix of size 2^n
         unitary_matrix = np.eye(self.states, dtype=complex)
-        unitary_matrix[:unitary_matrix.shape[0],
-                       :unitary_matrix.shape[1]] = unitary_matrix
+        unitary_matrix[:transition.shape[0],
+                       :transition.shape[1]] = transition
 
         rev_index = [self.reverse_mapping[state]
                      for state in range(self.states)]

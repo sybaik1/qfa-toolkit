@@ -28,7 +28,6 @@ class QiskitMeasureOnceQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
 
         circuit = QuantumCircuit(qreg_states, creg_states)
 
-        circuit.append(self.circuit[self.qfa.start_of_string], qreg_states)
         for c in [self.qfa.start_of_string] + w + [self.qfa.end_of_string]:
             circuit.append(self.circuit[c], qreg_states)
         circuit.measure_all(add_bits=False)
