@@ -23,6 +23,10 @@ class NotClosedUnderOperationException(Exception):
 
 
 class TotalState():
+    """
+    Attila Kondacs and John Watros. On the power of quantum finite automata.
+    1997. 38th Annual Symposium on Foundations of Computer Science
+    """
 
     def __init__(
         self,

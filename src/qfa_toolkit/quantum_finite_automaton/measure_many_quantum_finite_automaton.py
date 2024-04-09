@@ -176,6 +176,23 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
     def word_quotient(self: MmqfaT, w: list[int]) -> MmqfaT:
         raise NotImplementedError()
 
+    def inverse_homomorphism(self: MmqfaT, phi: list[list[int]]) -> MmqfaT:
+        """Returns the inverse homomorphism of the measure-many quantum finite
+        automaton.
+
+        For a quantum finite automaton M and a homomorphism phi, the inverse
+        homomorphism M' of M with respect to phi is an MMQFA M' such that M'(w)
+        = M(phi(w)).
+
+        Alex Brodsky and Nicholas Pippenger 2002. Characterizations of 1-way
+        Quantum Finite Automata. SIAM Journal on Computing.
+        """
+        if len(phi) == 0:
+            raise ValueError("phi must be non-empty")
+        if phi[self.start_of_string] != [self.start_of_string]:
+            raise ValueError("phi[start_of_string] must be [start_of_string]")
+        raise NotImplementedError()
+
     def difference(self, other: MmqfaT) -> MmqfaT:
         if self.alphabet != other.alphabet:
             raise ValueError("Alphabets must be the same")
