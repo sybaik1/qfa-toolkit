@@ -36,7 +36,9 @@ class MeasureOnceQuantumFiniteAutomatonLanguage(
         raise NotImplementedError()
 
     @classmethod
-    def _params_for_modulo_prime(cls, p: int, length: int) -> list[float]:
+    def _params_for_modulo_prime(
+            cls, p: int, length: int, seed: int) -> list[float]:
+        generator = np.random.default_rng(seed)
         max_iter = 100
         candidate_list = [
             [
@@ -48,7 +50,7 @@ class MeasureOnceQuantumFiniteAutomatonLanguage(
         ]
 
         for _ in range(max_iter):
-            ks = np.random.choice(range(1, p), size=length, replace=True)
+            ks = generator.choice(range(1, p), size=length, replace=True)
             if all(len([True for k in ks if k in candidate]) >= length/4
                    for candidate in candidate_list):
                 break
@@ -59,10 +61,10 @@ class MeasureOnceQuantumFiniteAutomatonLanguage(
         return phi
 
     @classmethod
-    def from_modulo_prime(cls, p: int):
+    def from_modulo_prime(cls, p: int, seed: int = 42):
         # select ks
         length = int(np.ceil(8 * np.log(p)))
-        phi = cls._params_for_modulo_prime(p, length)
+        phi = cls._params_for_modulo_prime(p, length, seed)
 
         # uniform distribution to selected
         f = np.sqrt(1/length)
