@@ -20,6 +20,7 @@ class QiskitQuantumFiniteAutomaton(abc.ABC):
         """
         self.qfa = qfa
         self.get_size()
+        self.mapping = {k: k for k in range(2 ** self.size)}
         self.get_mapping()
         self.transitions_to_circuit(qfa.transitions)
 
@@ -33,7 +34,7 @@ class QiskitQuantumFiniteAutomaton(abc.ABC):
 
     @property
     def defined_states(self) -> set[int]:
-        return set(range(self.qfa.states))
+        return set(map(lambda x: self.mapping[x], range(self.qfa.states)))
 
     @property
     def undefined_states(self) -> set[int]:
@@ -48,11 +49,7 @@ class QiskitQuantumFiniteAutomaton(abc.ABC):
         self.size = math.ceil(math.log2(self.qfa.states))
 
     def get_mapping(self):
-        self.mapping = dict()
-        for state in self.defined_states:
-            self.mapping[state] = state
-        for state in self.undefined_states:
-            self.mapping[state] = state
+        pass
 
     def _transition_to_circuit(self, transition, character: str):
         # make unitary matrix to be a square matrix of size 2^n

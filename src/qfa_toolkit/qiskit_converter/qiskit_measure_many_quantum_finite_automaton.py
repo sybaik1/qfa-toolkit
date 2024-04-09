@@ -23,6 +23,7 @@ class QiskitMeasureManyQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
         """
         self.qfa: Mmqfa = qfa
         self.get_size()
+        self.mapping = {k: k for k in range(2 ** self.size)}
         self.get_mapping()
         self.transitions_to_circuit(qfa.transitions)
 
@@ -39,26 +40,27 @@ class QiskitMeasureManyQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
     def get_mapping(self):
         # Create a mapping from the qubit register index to the qfa state
         half_size = 2 ** (self.size - 1)
-        self.mapping = dict()
+        new_mapping = dict()
         for index, state in enumerate(np.flatnonzero(
                 self.qfa.non_halting_states)):
-            self.mapping[state] = index
+            new_mapping[state] = index
         for index, state in enumerate(np.flatnonzero(
                 self.qfa.halting_states)):
-            self.mapping[state] = index + half_size
+            new_mapping[state] = index + half_size
         for index, state in enumerate(self.undefined_states):
             if index + len(np.flatnonzero(
                     self.qfa.non_halting_states)) < half_size:
-                self.mapping[state] = (index
-                                       + len(np.flatnonzero(
-                                           self.qfa.non_halting_states)))
+                new_mapping[state] = (index
+                                      + len(np.flatnonzero(
+                                          self.qfa.non_halting_states)))
             else:
-                self.mapping[state] = (index
-                                       + len(np.flatnonzero(
-                                           self.qfa.halting_states))
-                                       + half_size)
+                new_mapping[state] = (index
+                                      + len(np.flatnonzero(
+                                          self.qfa.halting_states))
+                                      + half_size)
 
         # State status mapping
+        self.mapping = new_mapping
         self.accepting_states = {self.mapping[state] for state in
                                  set(np.flatnonzero(
                                      self.qfa.accepting_states))}

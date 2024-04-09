@@ -62,6 +62,7 @@ for prime in primes:
         observed_rejection = sum(
             counts[state] for state in qmoqfa.rejecting_states)
         observed = [observed_acceptance, observed_rejection]
+
         expected_acceptance = int(moqfa(w) * shots)
         expected_rejection = shots - expected_acceptance
         expected = [expected_rejection, expected_acceptance]
