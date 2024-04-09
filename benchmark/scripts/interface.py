@@ -1,4 +1,3 @@
-# %%
 import json
 from pathlib import Path
 
@@ -11,9 +10,6 @@ from qfa_toolkit.quantum_finite_automaton_language import (
     MeasureOnceQuantumFiniteAutomatonLanguage as Moqfl)
 from qfa_toolkit.qiskit_converter import (
     QiskitMeasureOnceQuantumFiniteAutomaton as QMoqfa)
-
-import os
-import json
 
 
 n = 6
@@ -70,7 +66,7 @@ for prime in primes:
         with open(f"results/{prime}_{k}_observed.json", 'w') as f:
             json.dump(observed, f)
 
-        observed = [observed_rejection, observed_acceptance]
+        observed = [observed_acceptance, observed_rejection]
 
         expected_acceptance = int(moqfa(w) * shots)
         expected_rejection = shots - expected_acceptance
