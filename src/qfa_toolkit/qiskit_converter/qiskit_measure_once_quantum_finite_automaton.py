@@ -19,6 +19,7 @@ class QiskitMeasureOnceQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
             self.get_entropy_mapping()
         else:
             self.get_mapping()
+        assert len(self.accepting_states & self.rejecting_states) == 0
         self.transitions_to_circuit(qfa.transitions)
 
     def get_mapping(self):
@@ -54,6 +55,7 @@ class QiskitMeasureOnceQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
                 self.mapping[state] for state in
                 set(np.flatnonzero(
                     self.qfa.rejecting_states))}
+
 
     def get_circuit_for_string(self, w: list[int]):
         qreg_states = QuantumRegister(self.size, 'q_state')

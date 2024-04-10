@@ -29,17 +29,19 @@ circuits_dir = results_dir / "circuits"
 circuits_dir.mkdir(parents=True, exist_ok=True)
 
 # %%
-primes = [3, 5, 7, 11]
+primes = [7, 11]
 pm = generate_preset_pass_manager(optimization_level=3, backend=backend)
 
 for prime in primes:
-    print(f"prime: {prime}")
     moqfl = Moqfl.from_modulo_prime(prime)
     moqfa = moqfl.quantum_finite_automaton
-    qmoqfa = QMoqfa(moqfa)
+    qmoqfa = QMoqfa(moqfa, False)
     qmoqfa.__str__
     for k in range(1, 20):
         w = [1]*k
+        if prime == 7 and k < 10:
+            continue
+        print(f"prime: {prime}, k: {k}")
         circuit = qmoqfa.get_circuit_for_string(w)
         transpiled_circuit = pm.run(circuit)
 

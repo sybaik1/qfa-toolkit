@@ -29,6 +29,7 @@ class QiskitMeasureManyQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
             self.get_entropy_mapping()
         else:
             self.get_mapping()
+        assert len(self.accepting_states & self.rejecting_states) == 0
         self.transitions_to_circuit(qfa.transitions)
 
     @property
