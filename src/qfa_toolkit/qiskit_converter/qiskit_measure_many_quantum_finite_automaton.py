@@ -1,6 +1,7 @@
 import math
 
 import numpy as np
+import itertools as it
 from qiskit.circuit import QuantumCircuit  # type: ignore
 from qiskit import QuantumRegister, ClassicalRegister  # type: ignore
 
@@ -10,7 +11,7 @@ from ..quantum_finite_automaton import (
 
 
 class QiskitMeasureManyQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
-    def __init__(self, qfa: Mmqfa):
+    def __init__(self, qfa: Mmqfa, use_entropy_mapping: bool = True):
         """
         -- Properties --
         qfa: Mmqfa
@@ -24,7 +25,10 @@ class QiskitMeasureManyQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
         self.qfa: Mmqfa = qfa
         self.get_size()
         self.mapping = {k: k for k in range(2 ** self.size)}
-        self.get_mapping()
+        if use_entropy_mapping:
+            self.get_entropy_mapping()
+        else:
+            self.get_mapping()
         self.transitions_to_circuit(qfa.transitions)
 
     @property
@@ -36,6 +40,51 @@ class QiskitMeasureManyQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
             math.log2(
                 max(len(np.flatnonzero(self.qfa.halting_states)),
                     len(np.flatnonzero(self.qfa.non_halting_states)))))
+
+    def get_entropy_mapping(self):
+        state_order = [
+                int('1'+''.join(map(str, tp)), base=2)
+                for tp in sorted(it.product([0, 1], repeat=self.size-1))]
+        new_mapping = dict()
+        # non-halting states mapped with the first qubit as 0
+        for index, state in enumerate(np.flatnonzero(
+                self.qfa.non_halting_states)):
+            new_mapping[state] = index
+
+        # halting states
+        # bits with less 1s
+        for index, state in enumerate(np.flatnonzero(
+                self.qfa.accepting_states)):
+            new_mapping[state] = state_order[index]
+        # bits with more 1s
+        for index, state in enumerate(np.flatnonzero(
+                self.qfa.rejecting_states)):
+            new_mapping[state] = state_order[-index-1]
+
+        half_size = 2 ** (self.size - 1)
+        for index, state in enumerate(self.undefined_states):
+            if index + len(np.flatnonzero(
+                    self.qfa.non_halting_states)) < half_size:
+                new_mapping[state] = (index
+                                      + len(np.flatnonzero(
+                                          self.qfa.non_halting_states)))
+            else:
+                new_mapping[state] = (index
+                                      + len(np.flatnonzero(
+                                          self.qfa.accepting_states))
+                                      + half_size)
+
+        # State status mapping
+        self.mapping = new_mapping
+        self.accepting_states = {self.mapping[state] for state in
+                                 set(np.flatnonzero(
+                                     self.qfa.accepting_states))}
+        self.rejecting_states = {self.mapping[state] for state in
+                                 set(np.flatnonzero(
+                                     self.qfa.rejecting_states))}
+        self.non_halting_states = {self.mapping[state] for state in
+                                   set(np.flatnonzero(
+                                       self.qfa.non_halting_states))}
 
     def get_mapping(self):
         # Create a mapping from the qubit register index to the qfa state
