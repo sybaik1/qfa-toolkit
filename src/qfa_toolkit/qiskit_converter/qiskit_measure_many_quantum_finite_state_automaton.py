@@ -10,7 +10,9 @@ from ..quantum_finite_state_automaton import (
     MeasureManyQuantumFiniteStateAutomaton as Mmqfa)
 
 
-class QiskitMeasureManyQuantumFiniteStateAutomaton(QiskitQuantumFiniteStateAutomaton):
+class QiskitMeasureManyQuantumFiniteStateAutomaton(
+    QiskitQuantumFiniteStateAutomaton
+):
     def __init__(self, qfa: Mmqfa, use_entropy_mapping: bool = True):
         """
         -- Properties --

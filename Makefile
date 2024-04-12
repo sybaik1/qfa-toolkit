@@ -29,6 +29,12 @@ jupyter: $(VENV)
 	$(VENV)/bin/jupyter notebook \
 		--ip=0.0.0.0 --port=50000 --no-browser
 
+document.md: | $(VENV)
+	$(VENV)/bin/pdoc3 --pdf qfa_toolkit > $@
+
+document.pdf: document.md | $(VENV)
+	$(VENV)/bin/mdpdf -o $@ $<
+
 .PHONY: clean clean-venv clean-build clean-pyc
 clean: clean-venv clean-build clean-pyc
 

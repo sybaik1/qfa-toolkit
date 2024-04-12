@@ -20,6 +20,9 @@ optional-dependencies.dev = [
   "jupyter~=1.0.0",
   "jupytext~=1.16.1",
   "matplotlib~=3.8.4",
+  "pylint~=3.1.0",
+  "pdoc3~=0.10.0",
+  "mdpdf~=0.0.18",
 ]
 version = "0.0.1"
 
