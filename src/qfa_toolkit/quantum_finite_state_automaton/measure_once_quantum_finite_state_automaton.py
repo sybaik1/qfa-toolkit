@@ -3,9 +3,9 @@ from functools import reduce
 from typing import (TypeVar, Optional, )
 
 import numpy as np
-
 from .quantum_finite_state_automaton_base import Observable
-from .quantum_finite_state_automaton_base import QuantumFiniteStateAutomatonBase
+from .quantum_finite_state_automaton_base import (
+    QuantumFiniteStateAutomatonBase)
 from .quantum_finite_state_automaton_base import States
 from .quantum_finite_state_automaton_base import TotalState
 from .quantum_finite_state_automaton_base import Transition

@@ -71,33 +71,3 @@ class QuantumFiniteStateAutomatonLanguageBase(
     def enumerate(self) -> Iterator[list[int]]:
         every_string = _iterate_every_string(self.alphabet)
         return filter(lambda w: w in self, every_string)
-
-    def concatination(self: QflT, other: QflT) -> QflT:
-        raise NotImplementedError()
-
-    def union(self: QflT, other: QflT) -> QflT:
-        raise NotImplementedError()
-
-    def intersection(self: QflT, other: QflT) -> QflT:
-        raise NotImplementedError()
-
-    def __invert__(self: QflT) -> QflT:
-        return self.complement()
-
-    def complement(self: QflT) -> QflT:
-        raise NotImplementedError()
-
-    def difference(self: QflT, other: QflT) -> QflT:
-        raise NotImplementedError()
-
-    def equivalence(self: QflT, other: QflT) -> bool:
-        raise NotImplementedError()
-
-    def kleene_star(self: QflT) -> QflT:
-        raise NotImplementedError()
-
-    def reverse(self: QflT) -> QflT:
-        raise NotImplementedError()
-
-    def is_empty(self: QflT) -> bool:
-        raise NotImplementedError()

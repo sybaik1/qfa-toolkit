@@ -23,13 +23,13 @@ class TestRecognitionStrategy(unittest.TestCase):
         self.assertEqual(s(0.75), Result.ACCEPT)
 
     def test_positive_one_sided_bounded_error(self):
-        s = rs.PositiveOneSidedBoundedError(0.25)
+        s = rs.PositiveOneSidedBoundedError(0.75)
         self.assertEqual(s(0.0), Result.REJECT)
         self.assertEqual(s(0.5), Result.INVALID)
         self.assertEqual(s(0.875), Result.ACCEPT)
 
     def test_negative_one_sided_bounded_error(self):
-        s = rs.NegativeOneSidedBoundedError(0.25)
+        s = rs.NegativeOneSidedBoundedError(0.75)
         self.assertEqual(s(0.125), Result.REJECT)
         self.assertEqual(s(0.5), Result.INVALID)
         self.assertEqual(s(1.0), Result.ACCEPT)

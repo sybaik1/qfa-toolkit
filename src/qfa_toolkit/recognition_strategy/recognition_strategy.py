@@ -86,19 +86,19 @@ class PositiveOneSidedBoundedError(RecognitionStrategy):
     def __init__(self, epsilon: float) -> None:
         if epsilon > 1.0:
             raise ValueError("epsilon must be at most 1.0")
-        super().__init__(0.0, 1.0 - epsilon, True, False)
+        super().__init__(0.0, epsilon, True, False)
 
     @property
     def epsilon(self) -> float:
-        return 1.0 - self.accept_lowerbound
+        return self.accept_lowerbound
 
 
 class NegativeOneSidedBoundedError(RecognitionStrategy):
     def __init__(self, epsilon: float) -> None:
         if epsilon > 1.0:
             raise ValueError("epsilon must be at most 1.0")
-        super().__init__(epsilon, 1.0, False, True)
+        super().__init__(1.0 - epsilon, 1.0, False, True)
 
     @property
     def epsilon(self) -> float:
-        return self.reject_upperbound
+        return 1.0 - self.reject_upperbound

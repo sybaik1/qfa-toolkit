@@ -1,6 +1,6 @@
 import math
 from scipy.optimize import newton  # type: ignore
-from typing import (TypeVar, Generic, Optional, )
+from typing import (TypeVar, Optional, )
 from functools import reduce
 
 import numpy as np
@@ -9,60 +9,40 @@ from .quantum_finite_state_automaton_language_base import (
     QuantumFiniteStateAutomatonLanguageBase as Qfl)
 from ..quantum_finite_state_automaton import (
     MeasureManyQuantumFiniteStateAutomaton as Mmqfa)
-from ..recognition_strategy import PositiveOneSidedBoundedError as PosOneSided
-from ..recognition_strategy import RecognitionStrategy
 from ..recognition_strategy import NegativeOneSidedBoundedError as NegOneSided
-from ..recognition_strategy import IsolatedCutPoint
 
-MmqflT = TypeVar('MmqflT', bound='MeasureManyQuantumFiniteStateAutomatonLanguage')
-RecognitionStrategyT = TypeVar(
-    'RecognitionStrategyT', bound=RecognitionStrategy)
+MmqflT = TypeVar(
+    'MmqflT', bound='MeasureManyQuantumFiniteStateAutomatonLanguage')
 
 
-class MeasureManyQuantumFiniteStateAutomatonLanguage(
-    Qfl[Mmqfa, RecognitionStrategyT],
-    Generic[RecognitionStrategyT]
-):
-
-    def complement(self: MmqflT) -> MmqflT:
-        if not isinstance(self.strategy, IsolatedCutPoint):
-            raise ValueError(
-                "Complement is only defined for IsolatedCutPoint strategies")
-        threshold = 1.0 - self.strategy.threshold
-        epsilon = self.strategy.epsilon
-        isolated_cut_point = IsolatedCutPoint(threshold, epsilon)
-        return self.__class__(
-            ~self.quantum_finite_state_automaton, isolated_cut_point)
+class MeasureManyQuantumFiniteStateAutomatonLanguage(Qfl[Mmqfa, NegOneSided]):
 
     def intersection(self: MmqflT, other: MmqflT) -> MmqflT:
-        qfa = self.quantum_finite_state_automaton & other.quantum_finite_state_automaton
-        strategy: RecognitionStrategy
-        if (
-            isinstance(self.strategy, PosOneSided)
-            and isinstance(other.strategy, PosOneSided)
-        ):
-            epsilon = min(self.strategy.epsilon, other.strategy.epsilon)
-            strategy = PosOneSided(epsilon)
-        else:
-            raise NotImplementedError()
-        return self.__class__(qfa, strategy)
+        epsilon_1 = self.strategy.epsilon
+        epsilon_2 = other.strategy.epsilon
+        c = epsilon_2 / (epsilon_1 + epsilon_2)
+        qfa_1 = self.quantum_finite_state_automaton
+        qfa_2 = other.quantum_finite_state_automaton
+        qfa = Mmqfa.linear_combination(qfa_1, qfa_2, coefficients=[c, 1-c])
+        epsilon = (epsilon_1 * epsilon_2) / (epsilon_1 + epsilon_2)
+        return self.__class__(qfa, NegOneSided(epsilon))
+
+    def __and__(self: MmqflT, other: MmqflT) -> MmqflT:
+        return self.intersection(other)
+
+    def union(self: MmqflT, other: MmqflT) -> MmqflT:
+        qfa_1 = self.quantum_finite_state_automaton
+        qfa_2 = other.quantum_finite_state_automaton
+
+        if not (qfa_1.is_co_end_decisive() and qfa_2.is_co_end_decisive()):
+            raise ValueError("QFAs must be co-end-decisive")
+
+        qfa = qfa_1 | qfa_2
+        epsilon = self.strategy.epsilon * other.strategy.epsilon
+        return self.__class__(qfa, NegOneSided(epsilon))
 
     def __or__(self: MmqflT, other: MmqflT) -> MmqflT:
         return self.union(other)
-
-    def union(self: MmqflT, other: MmqflT) -> MmqflT:
-        qfa = self.quantum_finite_state_automaton | other.quantum_finite_state_automaton
-        if (
-            isinstance(self.strategy, NegOneSided)
-            and isinstance(other.strategy, NegOneSided)
-        ):
-            one_minus_epsilon = (
-                (1 - self.strategy.epsilon) * (1 - other.strategy.epsilon))
-            epsilon = 1 - one_minus_epsilon
-            strategy = NegOneSided(epsilon)
-        else:
-            raise NotImplementedError()
-        return self.__class__(qfa, strategy)
 
     @classmethod
     def from_unary_finite(
@@ -70,10 +50,8 @@ class MeasureManyQuantumFiniteStateAutomatonLanguage(
         ks: list[int],
         params: Optional[tuple[float, float]] = None
     ) -> "MeasureManyQuantumFiniteStateAutomatonLanguage[NegOneSided]":
-        return reduce(
-            cls.union,
-            map(lambda k: cls.from_unary_singleton(k, params), ks)
-        )
+        qfls = map(lambda k: cls.from_unary_singleton(k, params), ks)
+        return reduce(cls.union, qfls)
 
     @classmethod
     def _find_unary_singleton_parameters(cls, k: int) -> tuple[float, float]:
@@ -140,7 +118,7 @@ class MeasureManyQuantumFiniteStateAutomatonLanguage(
         c_reject_probability = math.pow(
             cos_theta * sin_theta * math.pow(cos_phi, k) * (1-cos_phi), 2)
         reject_probability = c_reject_probability / c
-        epsilon = 1 - reject_probability / 2
+        epsilon = reject_probability / 2
         strategy = NegOneSided(epsilon)
 
         return MeasureManyQuantumFiniteStateAutomatonLanguage(mmqfa, strategy)
