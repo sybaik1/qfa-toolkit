@@ -4,28 +4,17 @@ from qiskit_ibm_runtime import QiskitRuntimeService  # type: ignore
 from qiskit.transpiler.preset_passmanagers import (  # type: ignore
         generate_preset_pass_manager)
 
-from qfa_toolkit.quantum_finite_automaton import (
+from qfa_toolkit.quantum_finite_state_automaton import (
     MeasureOnceQuantumFiniteStateAutomaton as Moqfa,
     MeasureManyQuantumFiniteStateAutomaton as Mmqfa)
-from qfa_toolkit.quantum_finite_automaton_language import (
+from qfa_toolkit.quantum_finite_state_automaton_language import (
     MeasureOnceQuantumFiniteStateAutomatonLanguage as Moqfl,
     MeasureManyQuantumFiniteStateAutomatonLanguage as Mmqfl)
 from qfa_toolkit.qiskit_converter import (
     QiskitMeasureOnceQuantumFiniteStateAutomaton as QMoqfa,
     QiskitMeasureManyQuantumFiniteStateAutomaton as QMmqfa)
 
-from qiskit_aer.noise import (  # type: ignore
-    NoiseModel,)
 from qiskit_aer import AerSimulator  # type: ignore
-
-
-# TODO
-class CustumNoiseModel(NoiseModel):
-    def __init__(self, noise_model):
-        self.noise_model = noise_model
-
-    def __call__(self, circuit):
-        return self.noise_model.run(circuit)
 
 
 class ExperimentHandler:
@@ -42,11 +31,11 @@ class ExperimentHandler:
         self.qfa: Union[Moqfa, Mmqfa]
         self.Qqfa: Union[QMoqfa, QMmqfa]
         if isinstance(test_subject, Moqfl):
-            self.qfa = test_subject.quantum_finite_automaton
+            self.qfa = test_subject.quantum_finite_state_automaton
         elif isinstance(test_subject, Moqfa):
             self.qfa = test_subject
         elif isinstance(test_subject, Mmqfl):
-            self.qfa = test_subject.quantum_finite_automaton
+            self.qfa = test_subject.quantum_finite_state_automaton
         elif isinstance(test_subject, Mmqfa):
             self.qfa = test_subject
 
@@ -114,6 +103,8 @@ class ExperimentHandler:
             self.results[''.join(map(str, w))] = {
                 'observed': observed, 'expected': expected}
 
+        self.results['metadata'] = {
+            'shots': self.shots, 'backend': self.backend}
         return self.results
 
 
@@ -121,12 +112,26 @@ class ExperimentHandler:
 if __name__ == '__main__':
     service = QiskitRuntimeService()
     backend = service.get_backend('ibm_hanoi')
-    aer = AerSimulator.from_backend(backend=backend)
+
+    from mimicnoisemodel import MimicNoiseModel  # type: ignore
+    noise_model = MimicNoiseModel(backend, 0.001)
+    aer = AerSimulator(noise_model=noise_model)
+
+    use_entropy_mapping = True
 
     for prime in [3]:
         qfl = Moqfl.from_modulo_prime(prime)
+<<<<<<< HEAD
         ws = [[1] * i for i in range(1, 10)]
         handler = ExperimentHandler(qfl, ws, aer)
+=======
+        handler = ExperimentHandler(
+            qfl,
+            [[1], [1, 1], [1, 1, 1]],
+            aer,
+            use_entropy_mapping,
+            shots=100000)
+>>>>>>> f4fa7cf (added custum noise model for local testing)
         handler.make_pool()
         results = handler.run()
         print(results)
