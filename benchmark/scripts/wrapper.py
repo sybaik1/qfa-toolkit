@@ -5,14 +5,14 @@ from qiskit.transpiler.preset_passmanagers import (  # type: ignore
         generate_preset_pass_manager)
 
 from qfa_toolkit.quantum_finite_automaton import (
-    MeasureOnceQuantumFiniteAutomaton as Moqfa,
-    MeasureManyQuantumFiniteAutomaton as Mmqfa)
+    MeasureOnceQuantumFiniteStateAutomaton as Moqfa,
+    MeasureManyQuantumFiniteStateAutomaton as Mmqfa)
 from qfa_toolkit.quantum_finite_automaton_language import (
-    MeasureOnceQuantumFiniteAutomatonLanguage as Moqfl,
-    MeasureManyQuantumFiniteAutomatonLanguage as Mmqfl)
+    MeasureOnceQuantumFiniteStateAutomatonLanguage as Moqfl,
+    MeasureManyQuantumFiniteStateAutomatonLanguage as Mmqfl)
 from qfa_toolkit.qiskit_converter import (
-    QiskitMeasureOnceQuantumFiniteAutomaton as QMoqfa,
-    QiskitMeasureManyQuantumFiniteAutomaton as QMmqfa)
+    QiskitMeasureOnceQuantumFiniteStateAutomaton as QMoqfa,
+    QiskitMeasureManyQuantumFiniteStateAutomaton as QMmqfa)
 
 from qiskit_aer.noise import (  # type: ignore
     NoiseModel,)
@@ -125,10 +125,8 @@ if __name__ == '__main__':
 
     for prime in [3]:
         qfl = Moqfl.from_modulo_prime(prime)
-        handler = ExperimentHandler(
-            qfl,
-            [[1], [1, 1], [1, 1, 1]],
-            aer)
+        ws = [[1] * i for i in range(1, 10)]
+        handler = ExperimentHandler(qfl, ws, aer)
         handler.make_pool()
         results = handler.run()
         print(results)

@@ -8,9 +8,9 @@ from qiskit.transpiler.preset_passmanagers import (  # type: ignore
 from qiskit import qpy  # type: ignore
 
 from qfa_toolkit.quantum_finite_automaton_language import (
-    MeasureManyQuantumFiniteAutomatonLanguage as Mmqfl)
+    MeasureManyQuantumFiniteStateAutomatonLanguage as Mmqfl)
 from qfa_toolkit.qiskit_converter import (
-    QiskitMeasureManyQuantumFiniteAutomaton as QMmqfa)
+    QiskitMeasureManyQuantumFiniteStateAutomaton as QMmqfa)
 
 import os
 import json

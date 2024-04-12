@@ -7,9 +7,9 @@ from qiskit.transpiler.preset_passmanagers import (  # type: ignore
 from qiskit import qpy  # type: ignore
 
 from qfa_toolkit.quantum_finite_automaton_language import (
-    MeasureOnceQuantumFiniteAutomatonLanguage as Moqfl)
+    MeasureOnceQuantumFiniteStateAutomatonLanguage as Moqfl)
 from qfa_toolkit.qiskit_converter import (
-    QiskitMeasureOnceQuantumFiniteAutomaton as QMoqfa)
+    QiskitMeasureOnceQuantumFiniteStateAutomaton as QMoqfa)
 
 
 n = 6
@@ -37,7 +37,7 @@ for prime in primes:
     moqfa = moqfl.quantum_finite_automaton
     qmoqfa = QMoqfa(moqfa, False)
     qmoqfa.__str__
-    for k in range(1, 20):
+    for k in range(0, 2 * prime + 1):
         w = [1]*k
         if prime == 7 and k < 10:
             continue
