@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 
-from .quantum_finite_automaton_base import Transition
+from .quantum_finite_state_automaton_base import Transition
 
 
 def direct_sum(u: Transition, v: Transition) -> Transition:
@@ -35,19 +35,13 @@ def get_transition_from_initial_to_superposition(
     _normalized: bool = True
 ) -> npt.NDArray[np.cdouble]:
     if _normalized:
-        assert np.isclose(np.linalg.norm(superposition), 1)
+        assert np.isclose(np.linalg.norm(superposition), 1), str(superposition)
 
-    if np.count_nonzero(superposition) == 1:
-        i = np.nonzero(superposition)[0][0]
-        states = len(superposition)
-        transition = np.eye(states, dtype=np.cdouble)
-        transition[0][0] = 0
-        transition[0][i] = 1
-        transition[i][i] = 0
-        transition[i][0] = 1
-        return transition
+    if len(superposition) == 1:
+        return np.array([[1]], dtype=np.cdouble)
 
     states_1 = len(superposition) // 2
+    states_2 = len(superposition) - states_1
 
     superposition_1 = superposition[:states_1]
     superposition_2 = superposition[states_1:]
@@ -55,10 +49,19 @@ def get_transition_from_initial_to_superposition(
     length_1 = np.linalg.norm(superposition_1)
     length_2 = np.linalg.norm(superposition_2)
 
+    normalized_superposition_1 = (
+        superposition_1 / length_1
+        if length_1 > 0 else np.array([1] + [0] * (states_1 - 1))
+    )
+    normalized_superposition_2 = (
+        superposition_2 / length_2
+        if length_2 > 0 else np.array([1] + [0] * (states_2 - 1))
+    )
+
     transition_1 = get_transition_from_initial_to_superposition(
-        superposition_1 / length_1)
+        normalized_superposition_1)
     transition_2 = get_transition_from_initial_to_superposition(
-        superposition_2 / length_2)
+        normalized_superposition_2)
 
     initial_transition = np.eye(len(superposition))
     initial_transition[0][0] = length_1
@@ -67,3 +70,11 @@ def get_transition_from_initial_to_superposition(
     initial_transition[states_1][states_1] = -length_1
 
     return direct_sum(transition_1, transition_2) @ initial_transition
+
+
+def mapping_to_transition(mapping: dict[int, int]) -> npt.NDArray[np.cdouble]:
+    states = len(mapping)
+    transition = np.zeros((states, states), dtype=np.cdouble)
+    for i, j in mapping.items():
+        transition[i][j] = 1
+    return transition

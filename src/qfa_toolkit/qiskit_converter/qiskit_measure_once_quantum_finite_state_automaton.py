@@ -3,14 +3,16 @@ import itertools as it
 from qiskit.circuit import QuantumCircuit  # type: ignore
 from qiskit import QuantumRegister, ClassicalRegister  # type: ignore
 
-from .qiskit_base import QiskitQuantumFiniteAutomaton
-from ..quantum_finite_automaton import MeasureOnceQuantumFiniteAutomaton
+from .qiskit_base import QiskitQuantumFiniteStateAutomaton
+from ..quantum_finite_state_automaton import MeasureOnceQuantumFiniteStateAutomaton
 
-Moqfa = MeasureOnceQuantumFiniteAutomaton
-QMoqfa = 'QiskitMeasureOnceQuantumFiniteAutomaton'
+Moqfa = MeasureOnceQuantumFiniteStateAutomaton
+QMoqfa = 'QiskitMeasureOnceQuantumFiniteStateAutomaton'
 
 
-class QiskitMeasureOnceQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
+class QiskitMeasureOnceQuantumFiniteStateAutomaton(
+    QiskitQuantumFiniteStateAutomaton
+):
     def __init__(self, qfa: Moqfa, use_entropy_mapping: bool = True):
         self.qfa = qfa
         self.get_size()
@@ -55,7 +57,6 @@ class QiskitMeasureOnceQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
                 self.mapping[state] for state in
                 set(np.flatnonzero(
                     self.qfa.rejecting_states))}
-
 
     def get_circuit_for_string(self, w: list[int]):
         qreg_states = QuantumRegister(self.size, 'q_state')

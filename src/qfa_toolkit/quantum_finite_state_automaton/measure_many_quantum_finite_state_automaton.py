@@ -1,20 +1,23 @@
+import math
 from typing import (TypeVar, Optional, )
+from functools import reduce
 
 import numpy as np
 
-from .quantum_finite_automaton_base import NotClosedUnderOperationException
-from .quantum_finite_automaton_base import Observable
-from .quantum_finite_automaton_base import QuantumFiniteAutomatonBase
-from .quantum_finite_automaton_base import States
-from .quantum_finite_automaton_base import TotalState
-from .quantum_finite_automaton_base import Transition
+from .quantum_finite_state_automaton_base import NotClosedUnderOperationException
+from .quantum_finite_state_automaton_base import Observable
+from .quantum_finite_state_automaton_base import QuantumFiniteStateAutomatonBase
+from .quantum_finite_state_automaton_base import States
+from .quantum_finite_state_automaton_base import TotalState
+from .quantum_finite_state_automaton_base import Transition
 from .utils import direct_sum
 from .utils import get_real_valued_transition
+from .utils import get_transition_from_initial_to_superposition
 
-MmqfaT = TypeVar('MmqfaT', bound='MeasureManyQuantumFiniteAutomaton')
+MmqfaT = TypeVar('MmqfaT', bound='MeasureManyQuantumFiniteStateAutomaton')
 
 
-class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
+class MeasureManyQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
     def __init__(
         self,
         transition: Transition,
@@ -60,11 +63,6 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         tape = self.string_to_tape(w)
         return self.process(tape).acceptance
 
-    def concatenation(self, other: MmqfaT) -> MmqfaT:
-        if self.alphabet != other.alphabet:
-            raise ValueError("Alphabets must be the same")
-        raise NotImplementedError()
-
     def union(self: MmqfaT, other: MmqfaT) -> MmqfaT:
         """Returns the union of two measure-many quantum finite automata.
 
@@ -80,13 +78,17 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
 
         Raises: NotClosedUnderOperationError
         """
-        if self.alphabet != other.alphabet:
-            raise ValueError("Alphabets must be the same")
-
         if not self.is_co_end_decisive() or not other.is_co_end_decisive():
             raise NotClosedUnderOperationException()
 
         return ~((~self) & (~other))
+
+    def __or__(self: MmqfaT, other: MmqfaT) -> MmqfaT:
+        """Returns the union of the quantum finite automaton.
+
+        See union() for details.
+        """
+        return self.union(other)
 
     def intersection(self: MmqfaT, other: MmqfaT) -> MmqfaT:
         """Returns the intersection of two measure-many quantum finite
@@ -122,6 +124,13 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         rejecting_states = halting_states & ~accepting_states
         return self.__class__(transition, accepting_states, rejecting_states)
 
+    def __and__(self: MmqfaT, other: MmqfaT) -> MmqfaT:
+        """Returns the intersection of the quantum finite automaton.
+
+        See intersection() for details.
+        """
+        return self.intersection(other)
+
     def complement(self: MmqfaT) -> MmqfaT:
         """Returns the complement of the quantum finite automaton.
 
@@ -135,43 +144,64 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         return self.__class__(
             self.transitions, self.rejecting_states, self.accepting_states)
 
-    def linear_combination(self: MmqfaT, other: MmqfaT, c: float) -> MmqfaT:
-        """Returns the linear combination of two MMQFA.
+    def __invert__(self: MmqfaT) -> MmqfaT:
+        """Returns the complement of the quantum finite automaton.
 
-        For a quantum finite automaton M, N and 0 <= c <= 1, the linear
-        combination M' is an MMQFA such that M'(w) = c * M(w) + (1 - c) * N(w)
+        See complement() for details.
+        """
+        return self.complement()
+
+    @classmethod
+    def linear_combination(
+        cls: MmqfaT,
+        *mmqfas: MmqfaT,
+        coefficients: Optional[list[float]] = None
+    ) -> MmqfaT:
+        """Returns the linear combination of the measure-once quantum finite
+        automata.
+
+        For quantum finite automata M, N and 0 <= c <= 1, the linear
+        combination M' is an mmqfa such that M'(w) = c * M(w) + (1 - c) * N(w)
         for all w.
 
         Alberto Bertoni, Carlo Mereghetti, and Beatrice Palano. 2003. Quantum
         Computing: 1-Way Quantum Automata. In Proceedings of the 8th
         International Conference on Developments in Language Theory (DLT'04).
         """
-        if self.alphabet != other.alphabet:
-            raise ValueError("Alphabets must be the same")
-        if not 0 <= c and c <= 1:
-            raise ValueError("c must be in [0, 1]")
+        if len(mmqfas) == 0:
+            raise ValueError("mmqfas must be non-empty")
 
-        states = self.states + other.states
-        f = np.sqrt(1 - c)
-        d = np.sqrt(c)
+        alphabet = mmqfas[0].alphabet
+        if not all(mmqfa.alphabet == alphabet for mmqfa in mmqfas):
+            raise ValueError("mmqfas must have the same alphabet")
 
-        initial_transition = np.eye(states)
-        initial_transition[0][0] = d
-        initial_transition[0][self.states] = f
-        initial_transition[self.states][0] = f
-        initial_transition[self.states][self.states] = -d
+        if coefficients is None:
+            coefficients = [1/len(mmqfas)] * len(mmqfas)
 
-        transition = np.stack([
-            direct_sum(u, v)
-            for u, v in zip(self.transitions, other.transitions)
+        if len(mmqfas) != len(coefficients):
+            raise ValueError("mmqfas and coefficients must have the same size")
+
+        if not math.isclose(sum(coefficients), 1):
+            raise ValueError("coefficients must sum to 1")
+
+        initial_superposition = np.concatenate([
+            [math.sqrt(coefficient)] + [0] * (mmqfa.states - 1)
+            for coefficient, mmqfa in zip(coefficients, mmqfas)
         ])
-        transition[self.start_of_string] = (
-            transition[self.start_of_string] @ initial_transition)
+        initial_transition = get_transition_from_initial_to_superposition(
+            initial_superposition)
+        transitions = np.stack([
+            reduce(direct_sum, sigma_transitions)
+            for sigma_transitions
+            in zip(*[mmqfa.transitions for mmqfa in mmqfas])
+        ])
+        transitions[cls.start_of_string] = (
+            transitions[cls.start_of_string] @ initial_transition)
         accepting_states = np.concatenate(
-            (self.accepting_states, other.accepting_states))
+            [mmqfa.accepting_states for mmqfa in mmqfas])
         rejecting_states = np.concatenate(
-            (self.rejecting_states, other.rejecting_states))
-        return self.__class__(transition, accepting_states, rejecting_states)
+            [mmqfa.rejecting_states for mmqfa in mmqfas])
+        return cls(transitions, accepting_states, rejecting_states)
 
     def word_quotient(self: MmqfaT, w: list[int]) -> MmqfaT:
         raise NotImplementedError()
@@ -191,11 +221,6 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
             raise ValueError("phi must be non-empty")
         if phi[self.start_of_string] != [self.start_of_string]:
             raise ValueError("phi[start_of_string] must be [start_of_string]")
-        raise NotImplementedError()
-
-    def difference(self, other: MmqfaT) -> MmqfaT:
-        if self.alphabet != other.alphabet:
-            raise ValueError("Alphabets must be the same")
         raise NotImplementedError()
 
     def equivalence(self, other: MmqfaT) -> bool:
@@ -218,26 +243,6 @@ class MeasureManyQuantumFiniteAutomaton(QuantumFiniteAutomatonBase):
         """
         if self.alphabet != other.alphabet:
             raise ValueError("Alphabets must be the same")
-        raise NotImplementedError()
-
-    def minimize(self: MmqfaT) -> MmqfaT:
-        raise NotImplementedError()
-
-    def symmetric_difference(self, other: MmqfaT) -> MmqfaT:
-        if self.alphabet != other.alphabet:
-            raise ValueError("Alphabets must be the same")
-        raise NotImplementedError()
-
-    def kleene_star(self: MmqfaT) -> MmqfaT:
-        raise NotImplementedError()
-
-    def kleene_plus(self: MmqfaT) -> MmqfaT:
-        raise NotImplementedError()
-
-    def reverse(self: MmqfaT) -> MmqfaT:
-        raise NotImplementedError()
-
-    def is_empty(self) -> bool:
         raise NotImplementedError()
 
     def is_end_decisive(self) -> bool:

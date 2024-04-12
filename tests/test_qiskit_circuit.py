@@ -16,12 +16,12 @@ class TestQiskitCircuit(unittest.TestCase):
     def setUp(self):
         self.simulator = BasicSimulator()
 
-    def test_qiskit_measure_once_quantum_finite_automaton_circuit(self):
+    def test_qiskit_measure_once_quantum_finite_state_automaton_circuit(self):
         shots = 10000
 
         for k in range(1, 4):
             moqfa = get_arbitrary_moqfa(k)
-            qc_moqfa = qc.QiskitMeasureOnceQuantumFiniteAutomaton(moqfa)
+            qc_moqfa = qc.QiskitMeasureOnceQuantumFiniteStateAutomaton(moqfa)
 
             for n in range(5):
                 w = [1] * n
@@ -57,13 +57,13 @@ class TestQiskitCircuit(unittest.TestCase):
                 chi_value = chisquare(observed, expected)
                 self.assertGreater(chi_value.pvalue, 0.05)
 
-    def test_qiskit_measure_many_quantum_finite_automaton_circuit(self):
+    def test_qiskit_measure_many_quantum_finite_state_automaton_circuit(self):
         shots = 10000
 
         for k in range(1, 4):
             r = 1 / k
             mmqfa = get_arbitrary_mmqfa(r)
-            qc_mmqfa = qc.QiskitMeasureManyQuantumFiniteAutomaton(mmqfa)
+            qc_mmqfa = qc.QiskitMeasureManyQuantumFiniteStateAutomaton(mmqfa)
 
             for n in range(5):
                 w = [1] * n

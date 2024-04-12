@@ -5,14 +5,14 @@ from qfa_toolkit.recognition_strategy import NegativeOneSidedBoundedError
 from qfa_toolkit.recognition_strategy import PositiveOneSidedBoundedError
 
 from .utils import get_arbitrary_moqfa
-from qfa_toolkit.quantum_finite_automaton_language import (
-    QuantumFiniteAutomatonLanguageBase as Qfl)
-from qfa_toolkit.quantum_finite_automaton_language import (
-    MeasureOnceQuantumFiniteAutomatonLanguage as Moqfl)
+from qfa_toolkit.quantum_finite_state_automaton_language import (
+    QuantumFiniteStateAutomatonLanguageBase as Qfl)
+from qfa_toolkit.quantum_finite_state_automaton_language import (
+    MeasureOnceQuantumFiniteStateAutomatonLanguage as Moqfl)
 
 
-class TestMeasureOnceuantumFiniteAutomatonLanguage(unittest.TestCase):
-    def test_measure_once_quantum_finite_automaton_language(self):
+class TestMeasureOnceuantumFiniteStateAutomatonLanguage(unittest.TestCase):
+    def test_measure_once_quantum_finite_state_automaton_language(self):
         # M(a^{4p+q}) is 1 if q = 0; 1/2 if q = 1, 3; 0 if q = 2
         moqfa = get_arbitrary_moqfa(4)
 

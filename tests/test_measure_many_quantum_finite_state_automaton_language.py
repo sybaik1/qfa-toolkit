@@ -6,12 +6,12 @@ from qfa_toolkit.recognition_strategy import IsolatedCutPoint
 from qfa_toolkit.recognition_strategy import NegativeOneSidedBoundedError
 
 from .utils import get_arbitrary_mmqfa
-from qfa_toolkit.quantum_finite_automaton_language import (
-    MeasureManyQuantumFiniteAutomatonLanguage as Mmqfl)
+from qfa_toolkit.quantum_finite_state_automaton_language import (
+    MeasureManyQuantumFiniteStateAutomatonLanguage as Mmqfl)
 
 
-class TestMeasureManyQuantumFiniteAutomatonLanguage(unittest.TestCase):
-    def test_measure_many_quantum_finite_automaton_language(self):
+class TestMeasureManyQuantumFiniteStateAutomatonLanguage(unittest.TestCase):
+    def test_measure_many_quantum_finite_state_automaton_language(self):
         # M(a^n) = (1/2)^n
         mmqfa = get_arbitrary_mmqfa(1/2)
 

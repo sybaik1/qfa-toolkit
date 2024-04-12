@@ -2,22 +2,22 @@ import numpy as np
 from functools import reduce
 from typing import (Generic, TypeVar, )
 
-from .quantum_finite_automaton_language_base import (
-    QuantumFiniteAutomatonLanguageBase as Qfl)
-from ..quantum_finite_automaton import (
-    MeasureOnceQuantumFiniteAutomaton as Moqfa)
-from ..quantum_finite_automaton.utils import (
+from .quantum_finite_state_automaton_language_base import (
+    QuantumFiniteStateAutomatonLanguageBase as Qfl)
+from ..quantum_finite_state_automaton import (
+    MeasureOnceQuantumFiniteStateAutomaton as Moqfa)
+from ..quantum_finite_state_automaton.utils import (
     direct_sum, get_transition_from_initial_to_superposition)
 from ..recognition_strategy import RecognitionStrategy
 from ..recognition_strategy import NegativeOneSidedBoundedError as NegOneSided
 
 
-MoqflT = TypeVar('MoqflT', bound='MeasureOnceQuantumFiniteAutomatonLanguage')
+MoqflT = TypeVar('MoqflT', bound='MeasureOnceQuantumFiniteStateAutomatonLanguage')
 RecognitionStrategyT = TypeVar(
     'RecognitionStrategyT', bound=RecognitionStrategy)
 
 
-class MeasureOnceQuantumFiniteAutomatonLanguage(
+class MeasureOnceQuantumFiniteStateAutomatonLanguage(
     Qfl[Moqfa, RecognitionStrategyT],
     Generic[RecognitionStrategyT]
 ):
@@ -90,4 +90,4 @@ class MeasureOnceQuantumFiniteAutomatonLanguage(
         epsilon = 1/8
         strategy = NegOneSided(1 - epsilon)
 
-        return MeasureOnceQuantumFiniteAutomatonLanguage(moqfa, strategy)
+        return MeasureOnceQuantumFiniteStateAutomatonLanguage(moqfa, strategy)

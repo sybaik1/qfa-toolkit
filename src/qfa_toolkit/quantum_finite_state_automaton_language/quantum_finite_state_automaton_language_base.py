@@ -2,11 +2,11 @@ import itertools
 import abc
 from typing import (Iterator, TypeVar, Generic, )
 
-from ..quantum_finite_automaton import QuantumFiniteAutomatonBase
+from ..quantum_finite_state_automaton import QuantumFiniteStateAutomatonBase
 from ..recognition_strategy import RecognitionStrategy
 
-QflT = TypeVar('QflT', bound='QuantumFiniteAutomatonLanguageBase')
-QfaT = TypeVar('QfaT', bound=QuantumFiniteAutomatonBase)
+QflT = TypeVar('QflT', bound='QuantumFiniteStateAutomatonLanguageBase')
+QfaT = TypeVar('QfaT', bound=QuantumFiniteStateAutomatonBase)
 RecognitionStrategyT = TypeVar(
     'RecognitionStrategyT', bound=RecognitionStrategy)
 
@@ -29,31 +29,31 @@ def _iterate_every_string(alphabet: int) -> Iterator[list[int]]:
     return itertools.chain.from_iterable(iterables)
 
 
-class QuantumFiniteAutomatonLanguageBase(
+class QuantumFiniteStateAutomatonLanguageBase(
     abc.ABC, Generic[QfaT, RecognitionStrategyT]
 ):
     def __init__(
         self,
-        quantum_finite_automaton: QfaT,
+        quantum_finite_state_automaton: QfaT,
         strategy: RecognitionStrategyT
     ) -> None:
-        self.quantum_finite_automaton = quantum_finite_automaton
+        self.quantum_finite_state_automaton = quantum_finite_state_automaton
         self.strategy = strategy
 
     @property
     def alphabet(self) -> int:
-        return self.quantum_finite_automaton.alphabet
+        return self.quantum_finite_state_automaton.alphabet
 
     @property
     def start_of_string(self) -> int:
-        return self.quantum_finite_automaton.start_of_string
+        return self.quantum_finite_state_automaton.start_of_string
 
     @property
     def end_of_string(self) -> int:
-        return self.quantum_finite_automaton.end_of_string
+        return self.quantum_finite_state_automaton.end_of_string
 
     def __contains__(self, w: list[int]) -> bool:
-        probability = self.quantum_finite_automaton(w)
+        probability = self.quantum_finite_state_automaton(w)
         result = self.strategy(probability)
         if result == RecognitionStrategy.Result.INVALID:
             raise ValueError("Invalid result from recognition strategy")

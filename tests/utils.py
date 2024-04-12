@@ -6,14 +6,14 @@ from typing import (Callable, TypeVar, Iterable, Iterator, )
 
 import numpy as np
 
-from qfa_toolkit.quantum_finite_automaton import (
-    QuantumFiniteAutomatonBase as QfaBase)
-from qfa_toolkit.quantum_finite_automaton import (
-    MeasureManyQuantumFiniteAutomaton as Mmqfa)
-from qfa_toolkit.quantum_finite_automaton import (
-    MeasureOnceQuantumFiniteAutomaton as Moqfa)
-from qfa_toolkit.quantum_finite_automaton import Transitions
-from qfa_toolkit.quantum_finite_automaton import TotalState
+from qfa_toolkit.quantum_finite_state_automaton import (
+    QuantumFiniteStateAutomatonBase as QfaBase)
+from qfa_toolkit.quantum_finite_state_automaton import (
+    MeasureManyQuantumFiniteStateAutomaton as Mmqfa)
+from qfa_toolkit.quantum_finite_state_automaton import (
+    MeasureOnceQuantumFiniteStateAutomaton as Moqfa)
+from qfa_toolkit.quantum_finite_state_automaton import Transitions
+from qfa_toolkit.quantum_finite_state_automaton import TotalState
 
 
 def iterate_length_n_strings(alphabet: int, n: int) -> Iterator[list[int]]:

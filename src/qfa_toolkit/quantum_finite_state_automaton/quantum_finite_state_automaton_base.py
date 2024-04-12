@@ -14,7 +14,7 @@ Transition = npt.NDArray[np.cdouble]  # (n, n)-shape of complex
 Observable = npt.NDArray[np.bool_]  # (3, n)-shape of bool
 
 
-class InvalidQuantumFiniteAutomatonError(Exception):
+class InvalidQuantumFiniteStateAutomatonError(Exception):
     pass
 
 
@@ -89,10 +89,10 @@ class TotalState():
         return TotalState(superposition, acceptance, rejection)
 
 
-QfaT = TypeVar('QfaT', bound='QuantumFiniteAutomatonBase')
+QfaT = TypeVar('QfaT', bound='QuantumFiniteStateAutomatonBase')
 
 
-class QuantumFiniteAutomatonBase(abc.ABC):
+class QuantumFiniteStateAutomatonBase(abc.ABC):
     start_of_string: int = 0
 
     def __init__(self, transitions: npt.NDArray[np.cdouble]) -> None:
@@ -136,7 +136,7 @@ class QuantumFiniteAutomatonBase(abc.ABC):
         last_total_state = self.process(tape)
         _, acceptance, rejection = last_total_state.to_tuple()
         if not math.isclose(acceptance + rejection, 1):
-            raise InvalidQuantumFiniteAutomatonError()
+            raise InvalidQuantumFiniteStateAutomatonError()
         return acceptance
 
     @property
@@ -156,111 +156,6 @@ class QuantumFiniteAutomatonBase(abc.ABC):
     @abc.abstractmethod
     def step(self, total_state: TotalState, c: int) -> TotalState:
         raise NotImplementedError()
-
-    @abc.abstractmethod
-    def concatenation(self: QfaT, other: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    def __concat__(self: QfaT, other: QfaT) -> QfaT:
-        return self.concatenation(other)
-
-    @abc.abstractmethod
-    def union(self: QfaT, other: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    def __or__(self: QfaT, other: QfaT) -> QfaT:
-        """Returns the union of the quantum finite automaton.
-
-        See union() for details.
-        """
-        return self.union(other)
-
-    @abc.abstractmethod
-    def intersection(self: QfaT, other: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    def __and__(self: QfaT, other: QfaT) -> QfaT:
-        """Returns the intersection of the quantum finite automaton.
-
-        See intersection() for details.
-        """
-        return self.intersection(other)
-
-    def __multiply__(self: QfaT, other: QfaT) -> QfaT:
-        """Returns the intersection of the quantum finite automaton.
-
-        See intersection() for details.
-        """
-        return self.intersection(other)
-
-    @abc.abstractmethod
-    def complement(self: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    def __invert__(self: QfaT) -> QfaT:
-        """Returns the complement of the quantum finite automaton.
-
-        See complement() for details.
-        """
-        return self.complement()
-
-    @abc.abstractmethod
-    def difference(self: QfaT, other: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    def __sub__(self: QfaT, other: QfaT) -> QfaT:
-        return self.difference(other)
-
-    @abc.abstractmethod
-    def equivalence(self: QfaT, other: QfaT) -> bool:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def minimize(self: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def symmetric_difference(self: QfaT, other: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    def __xor__(self: QfaT, other: QfaT) -> QfaT:
-        return self.symmetric_difference(other)
-
-    @abc.abstractmethod
-    def kleene_star(self: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def kleene_plus(self: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def reverse(self: QfaT) -> QfaT:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def is_empty(self: QfaT) -> bool:
-        raise NotImplementedError()
-
-    def _string_to_number(self, string: list[int]) -> int:
-        """Returns the integer representation of the string.
-
-        Returns the sum of c * (alphabet ** i) for i, c in enumerate(string)
-        """
-        return sum(c * (self.alphabet ** c) for i, c in enumerate(string))
-
-    def _number_to_string(self, number: int) -> list[int]:
-        """Returns the string representation of the number.
-
-        See _string_to_number for details.
-        """
-        if self.alphabet == 1:
-            return [1] * number
-        string = []
-        while number != 0:
-            string.append(number % self.alphabet)
-            number //= self.alphabet
-        return string
 
     def string_to_tape(self, string: list[int]) -> list[int]:
         return [self.start_of_string] + string + [self.end_of_string]

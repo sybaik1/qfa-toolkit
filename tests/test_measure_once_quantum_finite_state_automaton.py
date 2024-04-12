@@ -6,8 +6,8 @@ from typing import (Callable, Iterable, )
 
 import numpy as np
 
-from qfa_toolkit.quantum_finite_automaton import (
-    MeasureOnceQuantumFiniteAutomaton as Moqfa)
+from qfa_toolkit.quantum_finite_state_automaton import (
+    MeasureOnceQuantumFiniteStateAutomaton as Moqfa)
 
 from .utils import get_arbitrary_moqfa
 from .utils import test_qfa
@@ -35,7 +35,7 @@ def test_bilinearize_operation(
             test.assertAlmostEqual(probability, m(w))
 
 
-class TestMeasureOnceQuantumFiniteAutomaton(unittest.TestCase):
+class TestMeasureOnceQuantumFiniteStateAutomaton(unittest.TestCase):
 
     def setUp(self):
         self.get_moqfa = get_arbitrary_moqfa
@@ -140,7 +140,7 @@ class TestMeasureOnceQuantumFiniteAutomaton(unittest.TestCase):
     def test_linear_combination(self):
         for c in [i / 4 for i in range(4)]:
             def lin_comb(x, y):
-                return x.linear_combination(y, c)
+                return Moqfa.linear_combination(x, y, coefficients=[c, 1-c])
             test_binary_operation(
                 self, lin_comb, lambda x, y: c*x + (1-c)*y,
                 self.get_moqfa, self.get_moqfa,

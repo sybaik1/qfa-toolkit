@@ -5,12 +5,12 @@ import itertools as it
 from qiskit.circuit import QuantumCircuit  # type: ignore
 from qiskit import QuantumRegister, ClassicalRegister  # type: ignore
 
-from .qiskit_base import QiskitQuantumFiniteAutomaton
-from ..quantum_finite_automaton import (
-    MeasureManyQuantumFiniteAutomaton as Mmqfa)
+from .qiskit_base import QiskitQuantumFiniteStateAutomaton
+from ..quantum_finite_state_automaton import (
+    MeasureManyQuantumFiniteStateAutomaton as Mmqfa)
 
 
-class QiskitMeasureManyQuantumFiniteAutomaton(QiskitQuantumFiniteAutomaton):
+class QiskitMeasureManyQuantumFiniteStateAutomaton(QiskitQuantumFiniteStateAutomaton):
     def __init__(self, qfa: Mmqfa, use_entropy_mapping: bool = True):
         """
         -- Properties --

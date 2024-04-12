@@ -3,10 +3,10 @@ import unittest
 
 import numpy as np
 
-from qfa_toolkit.quantum_finite_automaton import (
+from qfa_toolkit.quantum_finite_state_automaton import (
     NotClosedUnderOperationException)
-from qfa_toolkit.quantum_finite_automaton import (
-    MeasureManyQuantumFiniteAutomaton as Mmqfa)
+from qfa_toolkit.quantum_finite_state_automaton import (
+    MeasureManyQuantumFiniteStateAutomaton as Mmqfa)
 
 from .utils import get_arbitrary_mmqfa
 from .utils import test_qfa
@@ -15,7 +15,7 @@ from .utils import test_binary_operation
 from .utils import test_total_state_during_process
 
 
-class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
+class TestMeasureManyQuantumFiniteStateAutomaton(unittest.TestCase):
 
     def setUp(self) -> None:
         self.get_mmqfa = get_arbitrary_mmqfa
@@ -65,7 +65,7 @@ class TestMeasureManyQuantumFiniteAutomaton(unittest.TestCase):
     def test_linear_combination(self) -> None:
         for c in [i / 4 for i in range(4)]:
             def lin_comb(x: Mmqfa, y: Mmqfa) -> Mmqfa:
-                return x.linear_combination(y, c)
+                return Mmqfa.linear_combination(x, y, coefficients=[c, 1-c])
             test_binary_operation(
                 self, lin_comb, lambda x, y: c*x + (1-c)*y,
                 self.get_mmqfa, self.get_co_end_decisive,

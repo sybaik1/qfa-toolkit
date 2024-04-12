@@ -3,15 +3,15 @@ import math
 import numpy as np
 
 from .utils import unitary_matrix_to_circuit
-from ..quantum_finite_automaton.quantum_finite_automaton_base import (
-        QuantumFiniteAutomatonBase)
+from ..quantum_finite_state_automaton.quantum_finite_state_automaton_base import (
+        QuantumFiniteStateAutomatonBase)
 
 
-class QiskitQuantumFiniteAutomaton(abc.ABC):
-    def __init__(self, qfa: QuantumFiniteAutomatonBase):
+class QiskitQuantumFiniteStateAutomaton(abc.ABC):
+    def __init__(self, qfa: QuantumFiniteStateAutomatonBase):
         """
         -- Properties --
-        qfa: QuantumFiniteAutomaton
+        qfa: QuantumFiniteStateAutomaton
         size: int
         mapping: dict[int, int]
         defined_states: set[int]
