@@ -83,9 +83,19 @@ class ExperimentHandler:
 
         return observed
 
-    def run(self) -> dict[str, dict[str, tuple[float, float]]]:
+    @property
+    def metadata(self):
+        return {
+            'qfa size': self.qfa.states,
+            'qiskit circuit size': self.Qqfa.size,
+        }
+
+    def run(self,
+            status: bool = False) -> dict[str, dict[str, tuple[float, float]]]:
         self.results = dict()
         for w, circuit in self.circuits:
+            if status:
+                print(f"running \'{''.join(map(str, w))}\'")
             retry_count = 0
             while retry_count < self.retry_limit:
                 try:
@@ -103,8 +113,6 @@ class ExperimentHandler:
             self.results[''.join(map(str, w))] = {
                 'observed': observed, 'expected': expected}
 
-        self.results['metadata'] = {
-            'shots': self.shots, 'backend': self.backend}
         return self.results
 
 
@@ -120,18 +128,13 @@ if __name__ == '__main__':
     use_entropy_mapping = True
 
     for prime in [3]:
-        qfl = Moqfl.from_modulo_prime(prime)
-<<<<<<< HEAD
-        ws = [[1] * i for i in range(1, 10)]
-        handler = ExperimentHandler(qfl, ws, aer)
-=======
+        qfl: Moqfl = Moqfl.from_modulo_prime(prime)
         handler = ExperimentHandler(
             qfl,
             [[1], [1, 1], [1, 1, 1]],
             aer,
             use_entropy_mapping,
             shots=100000)
->>>>>>> f4fa7cf (added custum noise model for local testing)
         handler.make_pool()
         results = handler.run()
         print(results)

@@ -74,7 +74,11 @@ class MeasureOnceQuantumFiniteStateAutomatonLanguage(Qfl[Moqfa, NegOneSided]):
         return cls(moqfa, NegOneSided(epsilon))
 
     @classmethod
-    def from_modulo_prime(cls, p: int, seed: int = 42) -> MoqflT:
+    def from_modulo_prime(
+            cls,
+            p: int,
+            length: int = 0,
+            seed: int = 42) -> MoqflT:
         """Create a quantum finite state automaton that recognizes the language
         of strings whose length is divisible by p.
 
@@ -93,7 +97,8 @@ class MeasureOnceQuantumFiniteStateAutomatonLanguage(Qfl[Moqfa, NegOneSided]):
             raise ValueError("p must be a prime number larger than 2.")
 
         # select ks
-        length = int(np.ceil(8 * np.log(p)))
+        if length == 0:
+            length = int(np.ceil(8 * np.log(p)))
         phis = cls._params_for_modulo_prime(p, length, seed)
 
         # uniform distribution to selected
