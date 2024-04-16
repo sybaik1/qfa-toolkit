@@ -1,0 +1,10 @@
+{
+    "qfa size": 32,
+    "qiskit circuit size": 5,
+    "name": "mapping effect, mimic rate {mimic_rate}",
+    "shots": 100000,
+    "simulator": true,
+    "mimic_rate": 0.01,
+    "use_entropy_mapping": false,
+    "use_mapping_noise_correction": false
+}
