@@ -164,9 +164,8 @@ class MeasureManyQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         combination M' is an mmqfa such that M'(w) = c * M(w) + (1 - c) * N(w)
         for all w.
 
-        Alberto Bertoni, Carlo Mereghetti, and Beatrice Palano. 2003. Quantum
-        Computing: 1-Way Quantum Automata. In Proceedings of the 8th
-        International Conference on Developments in Language Theory (DLT'04).
+        Maria Paola Bianchi and Beatrice Palano. 2010. Behaviours of Unary
+        Quantum Automata. Fundamenta Informaticae.
         """
         if len(mmqfas) == 0:
             raise ValueError("mmqfas must be non-empty")
