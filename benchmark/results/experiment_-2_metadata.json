@@ -1,0 +1,10 @@
+{
+    "language": "mod_5",
+    "name": "mapping effect, mimic rate change",
+    "shots": 100000,
+    "simulator": false,
+    "mimic_rate_gate": null,
+    "mimic_rate_readout": null,
+    "use_entropy_mapping": false,
+    "use_mapping_noise_correction": false
+}
