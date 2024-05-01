@@ -1,9 +1,9 @@
 # Description: This file contains the main function to run the experiments.
 import json
-from itertools import product
+import math
+from functools import reduce
 
 from qiskit_ibm_runtime import QiskitRuntimeService  # type: ignore
-
 from qiskit_aer import AerSimulator  # type: ignore
 
 from wrapper import ExperimentHandler
@@ -14,80 +14,291 @@ from qfa_toolkit.quantum_finite_state_automaton_language import (
     MeasureManyQuantumFiniteStateAutomatonLanguage as Mmqfl)
 
 
-experiments = [
-    {
-        'language':
-        [
-            Moqfl.from_modulo_prime(5, length) for length in range(5, 13)
-        ],
-        'strings':
-        [
-            [1] * length for length in range(2, 21)
-        ],
-        'settings':
-        {
-            'name': 'mapping effect, QFA state number effect',
-            'shots': 100000,
-            'simulator': True,
-            'mimic_rate': 1,
-            'use_entropy_mapping': entropy_mapping,
-            'use_mapping_noise_correction': False
-        }
-    } for entropy_mapping in [False, True]
-] + [
-    {
-        'language':
-        [
-            Moqfl.from_modulo_prime(prime) for prime in [3, 5, 7, 11]
-        ] + [
-            Mmqfl.from_unary_singleton(length) for length in range(2, 13)
-        ],
-        'strings':
-        [
-            [1] * length for length in range(2, 21)
-        ],
-        'settings':
-        {
-            'name': 'mapping effect, mimic rate {mimic_rate}',
-            'shots': 100000,
-            'simulator': True,
-            'mimic_rate': mimic_rate,
-            'use_entropy_mapping': entropy_mapping,
-            'use_mapping_noise_correction': False
-        }
-    } for entropy_mapping, mimic_rate in product(
-        [False, True], [0.01, 0.005, 0.001, 0.0005, 0])
-]
+singleton_mimic_rate = [1, 0.5, 0.1, 0.01, 0.005, 0]
+mod_mimic_rate = [1, 0.5, 0.1, 0.01, 0.005, 0]
+mod_entropy_mapping = [False, True]
 
-numbered_experiment = []
-index = 0
-for experiment in experiments:
-    for language in experiment['language']:
-        numbered_experiment.append(
-            (
-                index,
+
+def experiments(start: int = 0, shots: int = 100000):
+    index = 0
+    if start < 64:
+        yield from [
+            {
+                'language': Moqfl.from_modulo_prime(prime, copy_num),
+                'strings':
+                [
+                    [1] * length for length in range(2, 41)
+                ],
+                'settings':
                 {
-                    'language': language,
-                    'strings': experiment['strings'],
-                    'settings': experiment['settings']
+                    'language': f'mod_{prime}',
+                    'name': 'mapping effect, change QFA state number',
+                    'shots': shots,
+                    'simulator': True,
+                    'mimic_rate_gate': 1,
+                    'mimic_rate_readout': 1,
+                    'use_entropy_mapping': entropy_mapping,
+                    'use_mapping_noise_correction': False
                 }
-            )
-        )
-        index += 1
+            }
+            for prime in [3, 5, 7, 11]
+            for copy_num in range(5, 13)
+            for entropy_mapping in [False, True]
+        ]
+    index = 64
+    if start < 64 + 48:
+        yield from [
+            {
+                'language': Moqfl.from_modulo_prime(prime),
+                'strings':
+                [
+                    [1] * length for length in range(2, 41)
+                ],
+                'settings':
+                {
+                    'language': f'mod_{prime}',
+                    'name': 'mapping effect, mimic rate change',
+                    'shots': shots,
+                    'simulator': True,
+                    'mimic_rate_gate': mimic_rate,
+                    'mimic_rate_readout': mimic_rate,
+                    'use_entropy_mapping': entropy_mapping,
+                    'use_mapping_noise_correction': False
+                }
+            }
+            for prime in [3, 5, 7, 11]
+            for entropy_mapping in [False, True]
+            for mimic_rate in [1, 0.5, 0.1, 0.01, 0.005, 0]
+        ]
+    index = 112
+    if start < 112 + 66:
+        yield from [
+            {
+                'language': Mmqfl.from_unary_singleton(k),
+                'strings':
+                [
+                    [1] * length for length in range(2, 41)
+                ],
+                'settings':
+                {
+                    'language': f'singleton_{k}',
+                    'name': 'mapping effect, mimic rate change',
+                    'shots': shots,
+                    'simulator': True,
+                    'mimic_rate_gate': mimic_rate,
+                    'mimic_rate_readout': mimic_rate,
+                    'use_entropy_mapping': True,
+                    'use_mapping_noise_correction': False
+                }
+            }
+            for k in range(2, 13)
+            for mimic_rate in [1, 0.5, 0.1, 0.01, 0.005, 0]
+        ]
+    index = 178
+    if start < 178 + 16*8:
+        yield from [
+            {
+                'language': reduce(
+                    Mmqfl.intersection,
+                    [Mmqfl.from_unary_singleton(k) for _ in range(repeat)]),
+                'strings':
+                [
+                    [1] * length for length in range(0, 41)
+                ],
+                'settings':
+                {
+                    'language': f'singleton_{k}',
+                    'name': 'mapping effect, mimic rate change, intersection',
+                    'shots': shots/100,
+                    'simulator': True,
+                    'mimic_rate_gate': mimic_rate_gate,
+                    'mimic_rate_readout': mimic_rate_readout,
+                    'use_entropy_mapping': True,
+                    'use_mapping_noise_correction': False
+                }
+            }
+            for k in range(1, 5)
+            for repeat in range(3, 5)
+            for mimic_rate_gate in [0.001, 0.0005, 0.0001, 0.00005]
+            for mimic_rate_readout in [0.001, 0.0005, 0.0001, 0.00005]
+        ]
+    index = 306
+    if start < 306 + 100:
+        yield from [
+            {
+                'language': Mmqfl.from_unary_singleton(k),
+                'strings':
+                [
+                    [1] * length for length in range(0, 41)
+                ],
+                'settings':
+                {
+                    'language': f'singleton_{k}',
+                    'name': 'mapping effect, mimic rate change',
+                    'shots': shots/100,
+                    'simulator': True,
+                    'mimic_rate_gate': mimic_rate_gate,
+                    'mimic_rate_readout': mimic_rate_readout,
+                    'use_entropy_mapping': True,
+                    'use_mapping_noise_correction': False
+                }
+            }
+            for k in [3, 5, 7, 11]
+            for mimic_rate_gate in [0.01, 0.005, 0.001, 0.0005, 0]
+            for mimic_rate_readout in [0.01, 0.005, 0.001, 0.0005, 0]
+        ]
+    index = 406
+    if start < 406 + 18:
+        yield from [
+            {
+                'language': Moqfl.from_modulo_prime(p),
+                'strings':
+                [
+                    [1] * length for length in range(0, 41)
+                ],
+                'settings':
+                {
+                    'language': f'mod_{p}',
+                    'name': 'mapping effect, mimic rate change',
+                    'shots': shots/100,
+                    'simulator': True,
+                    'mimic_rate_gate': mimic_rate_gate,
+                    'mimic_rate_readout': mimic_rate_readout,
+                    'use_entropy_mapping': mapping,
+                    'use_mapping_noise_correction': False
+                }
+            }
+            for p in [3]
+            for mimic_rate_gate in [0.01, 0.005, 0.001]
+            for mimic_rate_readout in [0.01, 0.005, 0.001]
+            for mapping in [False, True]
+        ]
+    index = 424
+    if start < 424 + 50:
+        keys = [
+            (k, repeat, mimic_rate_gate, mimic_rate_readout)
+            for k in [3]
+            for repeat in range(2, 3)
+            for mimic_rate_gate in [0.01, 0.005, 0.001, 0.0005, 0]
+            for mimic_rate_readout in [0.01, 0.005, 0.001, 0.0005, 0]
+        ]
+        for k, repeat, mimic_rate_gate, mimic_rate_readout in keys:
+            if index < start:
+                index += 1
+                continue
+            yield {
+                'language': reduce(
+                    Mmqfl.union,
+                    [Mmqfl.from_unary_singleton(k) for _ in range(repeat)]),
+                'strings':
+                [
+                    [1] * length for length in range(0, 41)
+                ],
+                'settings':
+                {
+                    'language': f'singleton_{k}',
+                    'name': 'mapping effect, mimic rate change, union',
+                    'shots': shots/10,
+                    'simulator': True,
+                    'mimic_rate_gate': mimic_rate_gate,
+                    'mimic_rate_readout': mimic_rate_readout,
+                    'use_entropy_mapping': True,
+                    'use_mapping_noise_correction': False
+                }
+            }
+    index = 474
+    if start < 474 + 32:
+        yield from [
+            {
+                'language': Mmqfl.from_unary_singleton(3),
+                'strings':
+                [
+                    [1] * length for length in range(1, 41)
+                ],
+                'settings':
+                {
+                    'language': 'singleton_3',
+                    'name': 'mapping effect, mimic rate change',
+                    'shots': shots,
+                    'simulator': True,
+                    'mimic_rate_gate': mimic_rate_gate,
+                    'mimic_rate_readout': mimic_rate_readout,
+                    'use_entropy_mapping': entropy_mapping,
+                    'use_mapping_noise_correction': False
+                }
+            }
+            for entropy_mapping in [False, True]
+            for mimic_rate_gate in [0.01, 0.005, 0.001, 0]
+            for mimic_rate_readout in [0.01, 0.005, 0.001, 0]
+        ]
+    return
+    if start < 506 + 144:
+        yield from [
+            {
+                'language': Moqfl.from_modulo_prime(prime, copy_num),
+                'strings':
+                [
+                    [1] * length for length in range(2, 41)
+                ],
+                'settings':
+                {
+                    'language': f'mod_{prime}',
+                    'name': 'mapping effect, change QFA state number',
+                    'shots': shots,
+                    'simulator': True,
+                    'mimic_rate_gate': mimic_rate_gate,
+                    'mimic_rate_readout': mimic_rate_readout,
+                    'use_entropy_mapping': entropy_mapping,
+                    'use_mapping_noise_correction': False
+                }
+            }
+            for prime in [3]
+            for copy_num in range(5, 13)
+            for mimic_rate_gate in [0.01, 0.005, 0.001]
+            for mimic_rate_readout in [0.01, 0.005, 0.001]
+            for entropy_mapping in [False, True]
+        ]
 
 
 def main():
-    file_path = r'benchmark/results/'
+    file_path = r'benchmark/results/cusco/'
 
     service = QiskitRuntimeService()
-    backend = service.get_backend('ibm_hanoi')
+    backend = service.get_backend('ibm_cusco')
 
-    for index, experiment in numbered_experiment:
-        print(f'Running experiment {index}')
+    langauges = [
+            [Moqfl.from_modulo_prime(p) for p in [3, 5, 7, 11]] +
+            [Mmqfl.from_unary_singleton(k) for k in range(2, 13)] +
+            [reduce(
+                Mmqfl.intersection,
+                [Mmqfl.from_unary_singleton(k) for _ in range(
+                    Mmqfl._find_unary_constant_margin(k))])
+                for k in range(2, 5)]]
+    noise_models = [
+        MimicNoiseModel(backend, mimic_rate_gate, mimic_rate_readout)
+        for mimic_rate_gate in [
+            1, 0.5, 0.1, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005]
+        for mimic_rate_readout in [
+            1, 0.5, 0.1, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005]]
+
+    start_experiment = 449
+    total_experiments = 506
+
+    for index, experiment in enumerate(experiments(start_experiment)):
+        index = index + start_experiment
+        print(f'\
+Running experiment {index}/{total_experiments}: \
+{experiment["settings"]["name"]} \
+on {experiment["settings"]["language"]}\
+        ')
         noise_model = MimicNoiseModel(
             backend,
-            experiment['settings']['mimic_rate'])
-        aer = AerSimulator(noise_model=noise_model)
+            experiment['settings']['mimic_rate_gate'],
+            experiment['settings']['mimic_rate_readout'])
+        aer = AerSimulator(
+            noise_model=noise_model,
+            device="CPU",
+            batched_shots_gpu=True)
         qfl = experiment['language']
         handler = ExperimentHandler(
             qfl,
@@ -95,7 +306,7 @@ def main():
             aer,
             experiment['settings']['use_entropy_mapping'],
             shots=experiment['settings']['shots'])
-        handler.make_pool()
+        handler.make_pool(True)
         results = handler.run(True)
         with open(f'{file_path}experiment_{index}.json', 'w') as f:
             json.dump(results, f, indent=4)

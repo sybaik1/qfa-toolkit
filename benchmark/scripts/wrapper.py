@@ -57,11 +57,17 @@ class ExperimentHandler:
 
         self.retry_limit = retry_limit
 
-    def make_pool(self):
+    def make_pool(
+            self,
+            status: bool = False):
         self.circuits = list()
         for w in self.words:
+            if status:
+                print(f"making circuit for \'{''.join(map(str, w))}\'")
             circuit = self.Qqfa.get_circuit_for_string(w)
             self.circuits.append((w, self.pm.run(circuit)))
+            if status:
+                print(f"built circuit size: {dict(self.circuits[-1][1].count_ops())}")
 
     def change_noise_model(self, noise_model):
         self.backend = AerSimulator(noise_model=noise_model)
@@ -111,7 +117,9 @@ class ExperimentHandler:
             expected = (expected_acceptance, expected_rejection)
 
             self.results[''.join(map(str, w))] = {
-                'observed': observed, 'expected': expected}
+                'observed': observed,
+                'expected': expected,
+                'circuit': dict(circuit.count_ops())}
 
         return self.results
 

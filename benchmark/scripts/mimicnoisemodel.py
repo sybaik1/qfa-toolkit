@@ -8,10 +8,15 @@ from qiskit_aer.noise import (  # type: ignore
 
 
 class MimicNoiseModel(NoiseModel):
-    def __init__(self, backend, error_mimic_rate=0.5):
+    def __init__(
+            self,
+            backend,
+            gate_error_mimic_rate=0.5,
+            readout_error_mimic_rate=0.5):
         self.backend = backend
         super().__init__(basis_gates=self.backend.operation_names)
-        self.error_mimic_rate = error_mimic_rate
+        self.gate_error_mimic_rate = gate_error_mimic_rate
+        self.readout_error_mimic_rate = readout_error_mimic_rate
         self._get_basic_values()
         self._get_basic_errors()
         self._gen_noise_model()
@@ -19,6 +24,7 @@ class MimicNoiseModel(NoiseModel):
     def _get_basic_values(self):
         self.basic_gates = self.backend.operation_names
         self.target = deepcopy(self.backend.target)
+        self.coupling_map = self.backend.coupling_map
         self.qubit_prop = self.backend.target.qubit_properties
         self.dt = self.backend.dt
         self.qubit_length = self.target.num_qubits
@@ -54,7 +60,7 @@ class MimicNoiseModel(NoiseModel):
     def _gen_noise_model(self):
         # mean readout error on each qubit
         mean_q_error = sum(self.qubit_errors) / self.qubit_length
-        mimic_q_error = mean_q_error * self.error_mimic_rate
+        mimic_q_error = mean_q_error * self.readout_error_mimic_rate
         probs = [
             [1-mimic_q_error, mimic_q_error],
             [mimic_q_error, 1-mimic_q_error]]
@@ -66,7 +72,8 @@ class MimicNoiseModel(NoiseModel):
             mean_depol_param = sum([
                 depol_param
                 for _, depol_param in gate_errors]) / len(gate_errors)
-            mimic_depol_param = mean_depol_param * self.error_mimic_rate
+            mimic_depol_param = (
+                    mean_depol_param * self.gate_error_mimic_rate)
             for qubits, _ in gate_errors:
                 self.add_quantum_error(
                     depolarizing_error(mimic_depol_param, len(qubits)),
@@ -80,3 +87,4 @@ if __name__ == '__main__':
     backend = provider.get_backend('ibm_hanoi')
     mimic_noise_model = MimicNoiseModel(backend)
     print(mimic_noise_model)
+    print(mimic_noise_model.backend.coupling_map)
