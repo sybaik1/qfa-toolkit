@@ -231,7 +231,6 @@ def experiments(start: int = 0, shots: int = 100000):
             for mimic_rate_gate in [0.01, 0.005, 0.001, 0]
             for mimic_rate_readout in [0.01, 0.005, 0.001, 0]
         ]
-    return
     if start < 506 + 144:
         yield from [
             {
@@ -258,31 +257,41 @@ def experiments(start: int = 0, shots: int = 100000):
             for mimic_rate_readout in [0.01, 0.005, 0.001]
             for entropy_mapping in [False, True]
         ]
+    if start < 650 + 36:
+        yield from [
+            {
+                'language': Moqfl.from_modulo_prime(prime),
+                'strings':
+                [
+                    [1] * length for length in range(2, 41)
+                ],
+                'settings':
+                {
+                    'language': f'mod_{prime}',
+                    'name': 'mapping random',
+                    'shots': shots,
+                    'simulator': True,
+                    'mimic_rate_gate': mimic_rate_gate,
+                    'mimic_rate_readout': mimic_rate_readout,
+                    'use_entropy_mapping': False,
+                    'use_mapping_noise_correction': False
+                }
+            }
+            for prime in [3, 5, 7, 11]
+            for mimic_rate_gate in [0.01, 0.005, 0.001]
+            for mimic_rate_readout in [0.01, 0.005, 0.001]
+        ]
 
 
 def main():
-    file_path = r'benchmark/results/cusco/'
+    file_path = r'benchmark/results/sim/'
 
     service = QiskitRuntimeService()
-    backend = service.get_backend('ibm_cusco')
+    mimic_backend = service.get_backend('ibm_cusco')
+    backend = service.get_backend('ibmq_qasm_simulator')
 
-    langauges = [
-            [Moqfl.from_modulo_prime(p) for p in [3, 5, 7, 11]] +
-            [Mmqfl.from_unary_singleton(k) for k in range(2, 13)] +
-            [reduce(
-                Mmqfl.intersection,
-                [Mmqfl.from_unary_singleton(k) for _ in range(
-                    Mmqfl._find_unary_constant_margin(k))])
-                for k in range(2, 5)]]
-    noise_models = [
-        MimicNoiseModel(backend, mimic_rate_gate, mimic_rate_readout)
-        for mimic_rate_gate in [
-            1, 0.5, 0.1, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005]
-        for mimic_rate_readout in [
-            1, 0.5, 0.1, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005]]
-
-    start_experiment = 474
-    total_experiments = 506
+    start_experiment = 650
+    total_experiments = 686
 
     for index, experiment in enumerate(experiments(start_experiment)):
         index = index + start_experiment
@@ -292,18 +301,17 @@ Running experiment {index}/{total_experiments}: \
 on {experiment["settings"]["language"]}\
         ')
         noise_model = MimicNoiseModel(
-            backend,
+            mimic_backend,
             experiment['settings']['mimic_rate_gate'],
             experiment['settings']['mimic_rate_readout'])
-        aer = AerSimulator(
-            noise_model=noise_model,
-            device="CPU",
-            batched_shots_gpu=True)
+
+        backend.options.update_options(noise_model=noise_model)
+
         qfl = experiment['language']
         handler = ExperimentHandler(
             qfl,
             experiment['strings'],
-            aer,
+            backend,
             experiment['settings']['use_entropy_mapping'],
             shots=experiment['settings']['shots'])
         handler.make_pool(True)

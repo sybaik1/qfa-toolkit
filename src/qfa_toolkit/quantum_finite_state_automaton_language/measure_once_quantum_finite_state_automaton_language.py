@@ -77,7 +77,7 @@ class MeasureOnceQuantumFiniteStateAutomatonLanguage(Qfl[Moqfa, NegOneSided]):
     def from_modulo_prime(
             cls,
             p: int,
-            length: int = 0,
+            copy_num: int = 0,
             seed: int = 42) -> MoqflT:
         """Create a quantum finite state automaton that recognizes the language
         of strings whose length is divisible by p.
@@ -97,22 +97,22 @@ class MeasureOnceQuantumFiniteStateAutomatonLanguage(Qfl[Moqfa, NegOneSided]):
             raise ValueError("p must be a prime number larger than 2.")
 
         # select ks
-        if length == 0:
-            length = int(np.ceil(8 * np.log(p)))
-        phis = cls._params_for_modulo_prime(p, length, seed)
+        if copy_num == 0:
+            copy_num = int(np.ceil(8 * np.log(p)))
+        phis = cls._params_for_modulo_prime(p, copy_num, seed)
 
         # uniform distribution to selected
-        f = np.sqrt(1/length)
+        f = np.sqrt(1/copy_num)
         initial_transition = get_transition_from_initial_to_superposition(
-            np.array([f, 0]*length))
+            np.array([f, 0]*copy_num))
         # k automaton
-        acceptings = np.array([1, 0]*length, dtype=bool)
+        acceptings = np.array([1, 0]*copy_num, dtype=bool)
         sigma_k_transitions = [np.array([
             [np.cos(phi), 1j*np.sin(phi)],
             [1j*np.sin(phi), np.cos(phi)],
         ], dtype=np.cdouble) for phi in phis]
         sigma_transition = reduce(direct_sum, sigma_k_transitions)
-        final_transition = np.eye(2*length)
+        final_transition = np.eye(2*copy_num)
 
         transitions = np.stack([
             initial_transition,

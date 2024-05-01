@@ -19,7 +19,7 @@ primes = [11]  # 13, 17, 19, 23, 29, 31, 37, 41]
 # %%
 min_num_qubits = 6
 service = QiskitRuntimeService()
-backend = service.get_backend('ibm_hanoi')
+backend = service.get_backend('ibm_torino')
 print(f"backend: {backend}")
 
 # %%

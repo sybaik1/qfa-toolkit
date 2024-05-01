@@ -14,13 +14,13 @@ class QiskitMeasureOnceQuantumFiniteStateAutomaton(
     QiskitQuantumFiniteStateAutomaton
 ):
     def __init__(self, qfa: Moqfa, use_entropy_mapping: bool = True):
-        self.qfa = qfa
+        self.qfa: Moqfa = qfa
         self.get_size()
         self.mapping = {k: k for k in range(2 ** self.size)}
         if use_entropy_mapping:
             self.get_entropy_mapping()
         else:
-            self.get_mapping()
+            self.get_random_mapping()
         assert len(self.accepting_states & self.rejecting_states) == 0
         self.transitions_to_circuit(qfa.transitions)
 
@@ -30,10 +30,42 @@ class QiskitMeasureOnceQuantumFiniteStateAutomaton(
         self.accepting_states = set(np.flatnonzero(self.qfa.accepting_states))
         self.rejecting_states = set(np.flatnonzero(self.qfa.rejecting_states))
 
+    def get_random_mapping(self, seed: int = 42):
+        np.random.seed(seed)
+        state_order = list(range(2 ** self.size))
+        np.random.shuffle(state_order)
+        accepting_states_num = len(np.flatnonzero(self.qfa.accepting_states))
+        rejecting_states_num = len(np.flatnonzero(self.qfa.rejecting_states))
+
+        new_mapping = dict()
+        for index, state in enumerate(np.flatnonzero(
+                self.qfa.accepting_states)):
+            new_mapping[state] = state_order[index]
+        for index, state in enumerate(np.flatnonzero(
+                self.qfa.rejecting_states)):
+            new_mapping[state] = state_order[
+                    index + accepting_states_num]
+        for index, state in enumerate(self.undefined_states):
+            new_mapping[state] = state_order[
+                    index + accepting_states_num + rejecting_states_num]
+
+        # State status mapping
+        self.mapping = new_mapping
+        self.accepting_states = {
+                self.mapping[state] for state in
+                set(np.flatnonzero(
+                    self.qfa.accepting_states))}
+        self.rejecting_states = {
+                self.mapping[state] for state in
+                set(np.flatnonzero(
+                    self.qfa.rejecting_states))}
+
     def get_entropy_mapping(self):
         state_order = [
                 int(''.join(map(str, tp)), base=2)
-                for tp in sorted(it.product([0, 1], repeat=self.size))]
+                for tp in sorted(
+                    it.product([0, 1], repeat=self.size),
+                    key=sum)]
         new_mapping = dict()
         for index, state in enumerate(np.flatnonzero(
                 self.qfa.accepting_states)):

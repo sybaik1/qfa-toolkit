@@ -54,6 +54,20 @@ class MeasureManyQuantumFiniteStateAutomatonLanguage(Qfl[Mmqfa, NegOneSided]):
         return reduce(cls.union, qfls)
 
     @classmethod
+    def _find_unary_constant_margin(
+            cls,
+            k: int,
+            params: Optional[tuple[float, float]] = None) -> int:
+
+        if params is None:
+            theta, phi = cls._find_unary_singleton_parameters(k)
+        N = math.ceil(
+            1 / ((1-math.cos(theta)**2) * (1 - math.cos(phi))**2) +
+            1 / (math.cos(theta)**2*math.cos(phi)**2*k*(1 - math.cos(phi))**2)
+        ) - 1
+        return N
+
+    @classmethod
     def _find_unary_singleton_parameters(cls, k: int) -> tuple[float, float]:
         omega = newton(
             lambda x: math.pow(x, k+1)+(k+1)*x-k,

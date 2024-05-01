@@ -47,7 +47,9 @@ class QiskitMeasureManyQuantumFiniteStateAutomaton(
     def get_entropy_mapping(self):
         state_order = [
                 int('1'+''.join(map(str, tp)), base=2)
-                for tp in sorted(it.product([0, 1], repeat=self.size-1))]
+                for tp in sorted(
+                    it.product([0, 1], repeat=self.size-1),
+                    key=sum)]
         new_mapping = dict()
         # non-halting states mapped with the first qubit as 0
         for index, state in enumerate(np.flatnonzero(
@@ -68,14 +70,15 @@ class QiskitMeasureManyQuantumFiniteStateAutomaton(
         for index, state in enumerate(self.undefined_states):
             if index + len(np.flatnonzero(
                     self.qfa.non_halting_states)) < half_size:
-                new_mapping[state] = (index
-                                      + len(np.flatnonzero(
-                                          self.qfa.non_halting_states)))
+                new_mapping[state] = (
+                    index
+                    + len(np.flatnonzero(self.qfa.non_halting_states)))
             else:
-                new_mapping[state] = (index
-                                      + len(np.flatnonzero(
-                                          self.qfa.accepting_states))
-                                      + half_size)
+                new_mapping[state] = state_order[
+                    index
+                    + len(np.flatnonzero(self.qfa.non_halting_states))
+                    + len(np.flatnonzero(self.qfa.accepting_states))
+                    - half_size]
 
         # State status mapping
         self.mapping = new_mapping
@@ -106,10 +109,7 @@ class QiskitMeasureManyQuantumFiniteStateAutomaton(
                                       + len(np.flatnonzero(
                                           self.qfa.non_halting_states)))
             else:
-                new_mapping[state] = (index
-                                      + len(np.flatnonzero(
-                                          self.qfa.halting_states))
-                                      + half_size)
+                new_mapping[state] = (index + self.qfa.states)
 
         # State status mapping
         self.mapping = new_mapping
