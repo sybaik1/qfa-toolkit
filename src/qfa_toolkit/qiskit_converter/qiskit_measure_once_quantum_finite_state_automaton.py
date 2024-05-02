@@ -13,14 +13,23 @@ QMoqfa = 'QiskitMeasureOnceQuantumFiniteStateAutomaton'
 class QiskitMeasureOnceQuantumFiniteStateAutomaton(
     QiskitQuantumFiniteStateAutomaton
 ):
-    def __init__(self, qfa: Moqfa, use_entropy_mapping: bool = True):
+    def __init__(self, qfa: Moqfa, use_mapping_type: int = 0):
         self.qfa: Moqfa = qfa
         self.get_size()
         self.mapping = {k: k for k in range(2 ** self.size)}
-        if use_entropy_mapping:
+
+        # temporary fix TODO FIXME
+        if type(use_mapping_type) == bool:
+            use_mapping_type = 1 if use_mapping_type else 0
+
+        if use_mapping_type == 0:
+            self.get_mapping()
+        elif use_mapping_type == 1:
             self.get_entropy_mapping()
-        else:
+        elif use_mapping_type == 2:
             self.get_random_mapping()
+        else:
+            raise ValueError('Invalid use_mapping_type')
         assert len(self.accepting_states & self.rejecting_states) == 0
         self.transitions_to_circuit(qfa.transitions)
 
@@ -32,22 +41,28 @@ class QiskitMeasureOnceQuantumFiniteStateAutomaton(
 
     def get_random_mapping(self, seed: int = 42):
         np.random.seed(seed)
+        state_list = list(range(2 ** self.size))
         state_order = list(range(2 ** self.size))
         np.random.shuffle(state_order)
-        accepting_states_num = len(np.flatnonzero(self.qfa.accepting_states))
-        rejecting_states_num = len(np.flatnonzero(self.qfa.rejecting_states))
 
         new_mapping = dict()
-        for index, state in enumerate(np.flatnonzero(
-                self.qfa.accepting_states)):
+        for index, state in enumerate(state_list):
             new_mapping[state] = state_order[index]
-        for index, state in enumerate(np.flatnonzero(
-                self.qfa.rejecting_states)):
-            new_mapping[state] = state_order[
-                    index + accepting_states_num]
-        for index, state in enumerate(self.undefined_states):
-            new_mapping[state] = state_order[
-                    index + accepting_states_num + rejecting_states_num]
+
+#        accepting_states_num = len(np.flatnonzero(self.qfa.accepting_states))
+#        rejecting_states_num = len(np.flatnonzero(self.qfa.rejecting_states))
+#        for index, state in enumerate(np.flatnonzero(
+#                self.qfa.accepting_states)):
+#            new_mapping[state] = state_order[index]
+#        for index, state in enumerate(np.flatnonzero(
+#                self.qfa.rejecting_states)):
+#            new_mapping[state] = state_order[
+#                    index + accepting_states_num]
+#        for index, state in enumerate(self.undefined_states):
+#            new_mapping[state] = state_order[
+#                    index + accepting_states_num + rejecting_states_num]
+
+        print(new_mapping)
 
         # State status mapping
         self.mapping = new_mapping
