@@ -13,10 +13,10 @@ The toolkit consists of three main parts.
 - Qiskit Converter for MO-QFA
 
 # 1. Dependency and Installation
-Our dependencies is managed by `pyproject.toml`.
+Our dependencies are managed by `pyproject.toml`.
 The main dependencies are numpy and qiskit.
 
-You can install our package by the following commands.
+You can install our package with the following commands.
 ```bash
 git clone git@github.com:sybaik1/qfa-toolkit.git
 cd qfa-toolkit
@@ -24,7 +24,7 @@ pip install .
 ```
 
 # 2. Quick tour
-You can import the qfa-toolkit as an python package and use each of the classes to construct and test your QFA or QFL.
+You can import the qfa-toolkit as a Python package and use each of the classes to construct and test your QFA or QFL.
 Building a QFA can be done by defining the transitions and accepting (rejecting) states of the QFA.
 ```python
 import numpy as np
@@ -74,7 +74,7 @@ from qiskit.providers.basic_provider import BasicSimulator
 from qfa_toolkit.qiskit_converter import (
     QiskitMeasureOnceQuantumFiniteStateAutomaton as QMoqfa)
 
-# Circuit initialation
+# Circuit initialisation
 qiskit_moqfa = QMoqfa(moqfa)
 word = [1] * 3
 circuit = qiskit_moqfa.get_circuit_for_string(word)
@@ -94,20 +94,20 @@ observed_rejectance = sum(
 print(f'acceptance: {observed_acceptance}\n'
       f'rejectance: {observed_rejectance}')
 ```
-A similar process can be done with MMQFAs. Also, you can do operations on QFLs to get different languages you desire.
+A similar process can be done with MMQFAs. Also, you can do operations on QFLs to get the different languages you desire.
 
 # 3. Functionalities
-Go to the document.pdf to see the details of each classes Functionalities.
+Go to the `document.pdf` to see the details of each class's Functionalities.
 
 # Reading Materials for QFA
-If your not familiar with QFAs, and want to learn more about QFAs
+If you're not familiar with QFAs and want to learn more about QFAs
 you can find the basics in the following material.
 
 https://is.muni.cz/th/dy49n/b-thesis-QFA.pdf
 
 # Test
-For testing there are additional dependencies with scipy.
-The testing is done by unittest module by python.
+For testing, there are additional dependencies with scipy.
+The testing is done by unittest module by Python.
 Within the installed environment you can run the following test
 ```bash
 python3 -m unittest
