@@ -1,18 +1,63 @@
-# QFA-toolkit
-QFA-toolkit is for constructing a quantum finite automaton by using operations between quantum finite languages,
-and a quick way to transpile them into quantum circuits with qiskit.
-The toolkit consists of three main parts.
-## 1-way Quantum Finite-state Automata
-- Measure-Many one-way QFA (MM-QFA)
-- Measure-Once one-way QFA (MO-QFA)
-## 1-way Quantum Finite-state Language
-- Measure-Many one-way QFL (MM-QFL)
-- Measure-Once one-way QFL (MO-QFL)
-## Qiskit Converter
-- Qiskit Converter for MM-QFA
-- Qiskit Converter for MO-QFA
+# QFA-Toolkit: A Toolkit for Quantum Finite-State Automata
 
-# 1. Dependency and Installation
+<!--toc:start-->
+- [QFA-Toolkit: A Toolkit for Quantum Finite-State Automata](#qfa-toolkit-a-toolkit-for-quantum-finite-state-automata)
+  - [About QFA-Toolkit](#about-qfa-toolkit)
+    - [Density Mapping](#density-mapping)
+      - [Experimental Results](#experimental-results)
+  - [Dependency and Installation](#dependency-and-installation)
+  - [Quick Tour](#quick-tour)
+  - [Functionalities](#functionalities)
+  - [Reading Materials for QFA](#reading-materials-for-qfa)
+  - [Test](#test)
+  - [Citation](#citation)
+<!--toc:end-->
+
+## About QFA-Toolkit
+
+Constructing quantum finite-state automata (QFAs) from scratch is challenging
+for those without knowledge of quantum mechanics or formal language theory.
+This complexity arises from the constraints on transitions in QFAs, where
+transitions must adhere to the properties of a unitary matrix. Properly
+constructed QFAs are still prone to obtaining practical results that deviate
+significantly from theoretical ones, due to the high error rate associated with
+quantum computers. This discrepancy is attributed to errors introduced during
+computation, which can alter the bit-representation of each state in the QFA
+circuit.
+
+QFA-Toolkit is a framework that addresses these challenges and enhances
+simulation accuracy by providing intuitive QFA composition methods alongside
+improvements to the transpilation process from QFAs to quantum circuits. Our
+framework enables users to compose complex QFAs from simple QFAs using language
+operations. The intended workflow of our proposed framework is threefold:
+(1)~constructing simple QFAs, (2)~combining these simple QFAs with language
+operations to compose a \emph{complex} QFA and (3)~transpiling the resulting
+complex QFA into a circuit using density mapping. The given workflow lends to a
+more intuitive approach to quantum circuit construction as well as improved
+simulation accuracy therein.
+
+![Workflow](./figures/figure_scenario.png)
+
+### Density Mapping
+
+In our proposed framework, we also introduce the novel concept of \emph{density
+mapping}, a method employed in our framework for determining the
+bit-representation of each state in a QFA during transpilation. Density mapping
+is designed to reduce the probability of fluctuation caused by bit-flip errors.
+
+![Density Mapping](./figures/figure_density_mapping.png)
+
+#### Experimental Results
+
+We demonstrate the usefulness of the density mapping for emulating QFAs. The
+following figure shows the difference in accepting probability from using the
+naive mapping to using the density mapping on the language of strings whose
+length is a multiple of 5 on simulator.
+
+![Experimental Results](./figures/figure_density_mapping_result.png)
+
+## Dependency and Installation
+
 Our dependencies are managed by `pyproject.toml`.
 The main dependencies are numpy and qiskit.
 
@@ -23,9 +68,11 @@ cd qfa-toolkit
 pip install .
 ```
 
-# 2. Quick tour
-You can import the qfa-toolkit as a Python package and use each of the classes to construct and test your QFA or QFL.
-Building a QFA can be done by defining the transitions and accepting (rejecting) states of the QFA.
+## Quick Tour
+
+You can import the qfa-toolkit as a Python package and use each of the classes
+to construct and test your QFA or QFL. Building a QFA can be done by defining
+the transitions and accepting (rejecting) states of the QFA.
 ```python
 import numpy as np
 import math
@@ -53,7 +100,8 @@ transitions = np.array([
 moqfa = Moqfa(transitions, acceptings)
 ```
 
-If you want to build a QFL, you need to additionally give the accepting strategy for the language.
+If you want to build a QFL, you need to additionally give the accepting
+strategy for the language.
 
 ```python
 from qfa_toolkit.quantum_finite_state_automaton_language import (
@@ -94,21 +142,40 @@ observed_rejectance = sum(
 print(f'acceptance: {observed_acceptance}\n'
       f'rejectance: {observed_rejectance}')
 ```
-A similar process can be done with MMQFAs. Also, you can do operations on QFLs to get the different languages you desire.
+A similar process can be done with MMQFAs. Also, you can do operations on QFLs
+to get the different languages you desire.
 
-# 3. Functionalities
-Go to the `document.pdf` to see the details of each class's Functionalities.
+## Functionalities
 
-# Reading Materials for QFA
-If you're not familiar with QFAs and want to learn more about QFAs
-you can find the basics in the following material.
+Go to the document ([link](./document.pdf)) to see the details of each class's
+functionalities.
 
-https://is.muni.cz/th/dy49n/b-thesis-QFA.pdf
+## Reading Materials for QFA
 
-# Test
+If you're not familiar with QFAs and want to learn more about QFAs you can find
+the basics in the material
+([link](https://is.muni.cz/th/dy49n/b-thesis-QFA.pdf)).
+
+## Test
+
 For testing, there are additional dependencies with scipy.
 The testing is done by unittest module by Python.
-Within the installed environment you can run the following test
+Within the installed environment you can run the following test.
+
 ```bash
 python3 -m unittest
+```
+
+## Citation
+
+```bibtex
+@misc{BaikSH24,
+    title={A Framework for Quantum Finite-State Languages with Density Mapping},
+    author={SeungYeop Baik and Sicheol Sung and Yo-Sub Han},
+    year={2024},
+    eprint={2407.02776},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL},
+    url={https://arxiv.org/abs/2407.02776}, 
+}
 ```
