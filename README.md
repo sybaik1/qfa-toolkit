@@ -45,7 +45,7 @@ mapping}, a method employed in our framework for determining the
 bit-representation of each state in a QFA during transpilation. Density mapping
 is designed to reduce the probability of fluctuation caused by bit-flip errors.
 
-![Density Mapping](./figures/figure_density_mapping.png)
+![Density Mapping](./figures/figure_mapping.png)
 
 #### Experimental Results
 
@@ -54,7 +54,7 @@ following figure shows the difference in accepting probability from using the
 naive mapping to using the density mapping on the language of strings whose
 length is a multiple of 5 on simulator.
 
-![Experimental Results](./figures/figure_density_mapping_result.png)
+![Experimental Results](./figures/difference.png)
 
 ## Dependency and Installation
 
