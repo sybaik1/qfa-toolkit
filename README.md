@@ -29,11 +29,11 @@ QFA-Toolkit is a framework that addresses these challenges and enhances
 simulation accuracy by providing intuitive QFA composition methods alongside
 improvements to the transpilation process from QFAs to quantum circuits. Our
 framework enables users to compose complex QFAs from simple QFAs using language
-operations. The intended workflow of our proposed framework is threefold:
-(1)~constructing simple QFAs, (2)~combining these simple QFAs with language
-operations to compose a \emph{complex} QFA and (3)~transpiling the resulting
-complex QFA into a circuit using density mapping. The given workflow lends to a
-more intuitive approach to quantum circuit construction as well as improved
+operations. The intended workflow of our proposed framework is threefold: (1)
+constructing simple QFAs, (2) combining these simple QFAs with language
+operations to compose a *complex* QFA and (3) transpiling the resulting complex
+QFA into a circuit using density mapping. The given workflow lends to a more
+intuitive approach to quantum circuit construction as well as improved
 simulation accuracy therein.
 
 ![Workflow](./figures/figure_scenario.png)
