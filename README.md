@@ -52,7 +52,7 @@ is designed to reduce the probability of fluctuation caused by bit-flip errors.
 We demonstrate the usefulness of the density mapping for emulating QFAs. The
 following figure shows the difference in accepting probability from using the
 naive mapping to using the density mapping on the language of strings whose
-length is a multiple of 5 on simulator.
+length is a multiple of 5 on a qiskit simulator.
 
 ![Experimental Results](./figures/difference.png)
 
