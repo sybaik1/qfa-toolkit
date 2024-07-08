@@ -19,7 +19,7 @@
 QFA-Toolkit is a framework for constructing quantum finite-state automata
 (QFAs) from scratch. It provides:
 
-1.  Parameterized constructions of QFAs for unary modulo languages (`MOD_k`)
+1.  Parameterized constructions of QFAs for unary modulo languages (`MOD_p`)
     and unary singleton languages (`EQU_k`).
 2.  A method for combining simple QFAs with language operations for composing
     complex QFAs.
