@@ -2,6 +2,7 @@
 
 <!--toc:start-->
 - [QFA-Toolkit: A Toolkit for Quantum Finite-State Automata](#qfa-toolkit-a-toolkit-for-quantum-finite-state-automata)
+  - [TL;DR](#tldr)
   - [About QFA-Toolkit](#about-qfa-toolkit)
     - [Density Mapping](#density-mapping)
       - [Experimental Results](#experimental-results)
@@ -12,6 +13,18 @@
   - [Test](#test)
   - [Citation](#citation)
 <!--toc:end-->
+
+## TL;DR
+
+QFA-Toolkit is a framework for constructing quantum finite-state automata
+(QFAs) from scratch. It provides:
+
+1.  Parameterized constructions of QFAs for unary modulo languages (`MOD_k`)
+    and unary singleton languages (`EQU_k`).
+2.  A method for combining simple QFAs with language operations for composing
+    complex QFAs.
+3.  A transpilation process from QFAs to quantum circuits using density
+    mapping for improved simulation accuracy.
 
 ## About QFA-Toolkit
 
@@ -31,7 +44,7 @@ improvements to the transpilation process from QFAs to quantum circuits. Our
 framework enables users to compose complex QFAs from simple QFAs using language
 operations. The intended workflow of our proposed framework is threefold: (1)
 constructing simple QFAs, (2) combining these simple QFAs with language
-operations to compose a *complex* QFA and (3) transpiling the resulting complex
+operations to compose a complex QFA and (3) transpiling the resulting complex
 QFA into a circuit using density mapping. The given workflow lends to a more
 intuitive approach to quantum circuit construction as well as improved
 simulation accuracy therein.
