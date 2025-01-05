@@ -20,7 +20,7 @@
  A type-alias of `ndarray[Any, cdouble]` for a set of transition matrices.
 
  Implicitly, it is an `(m, n, n)`-shaped array and each `(n,n)`-shaped subarray
- is [Transition](###Transition).
+ is [Transition](#transition).
 
 ### Transition
 
@@ -33,7 +33,7 @@ Implicitly, its shape is `(n, n)` and it denotes a unitary transition matrix.
 A type-alias of `ndarray[Any, bool]` for an observable.
 
 Implicitly, it is a `(3,n)`-shaped array and each `n`-shaped subarray is
-[States](###States) which denotes accepting, rejecting or non-halting states,
+[States](#states) which denotes accepting, rejecting or non-halting states,
 respectively.
 
 ### TotalState
@@ -92,7 +92,7 @@ Abstract class for quantum finite-state automaton.
 
 Class for Measure-once quantum finite-state automaton.
 
-Subclass of [QuantumFiniteStateAutomatonBase](###QuantumFiniteStateAutomatonBase).
+Subclass of [QuantumFiniteStateAutomatonBase](#quantumfinitestateautomatonbase).
 
 Abbreviation: MOQFA
 
@@ -148,7 +148,7 @@ Abbreviation: MOQFA
 
 Class for Measure-many quantum finite-state automaton.
 
-Subclass of [QuantumFiniteStateAutomatonBase](###QuantumFiniteStateAutomatonBase).
+Subclass of [QuantumFiniteStateAutomatonBase](#quantumfinitestateautomatonbase).
 
 Abbreviation: MMQFA
 
@@ -227,7 +227,7 @@ Abstract class for quantum finite-state automaton language.
 Class for MOQFL.
 
 Subclass of
-[QuantumFiniteStateAutomatonLanguageBase](###QuantumFiniteStateAutomatonLanguageBase).
+[QuantumFiniteStateAutomatonLanguageBase](#quantumfinitestateautomatonlanguagebase).
 
 Abbreviation: MOQFL
 
@@ -255,7 +255,7 @@ Abbreviation: MOQFL
 Class for MMQFL.
 
 Subclass of
-[QuantumFiniteStateAutomatonLanguageBase](###QuantumFiniteStateAutomatonLanguageBase).
+[QuantumFiniteStateAutomatonLanguageBase](#quantumfinitestateautomatonlanguagebase).
 
 Abbreviation: MMQFL
 
@@ -311,7 +311,7 @@ Abstract class for Qiskit interface.
 Class for generating Qiskit circuits from MMQFAs.
 
 Subclass of
-[QiskitQuantumFiniteStateAutomaton](###QiskitQuantumFiniteStateAutomaton).
+[QiskitQuantumFiniteStateAutomaton](#qiskitquantumfinitestateautomaton).
 
 * Constructor
   ```
@@ -330,7 +330,7 @@ Subclass of
 Class for generating Qiskit circuits from MOQFAs.
 
 Subclass of
-[QiskitQuantumFiniteStateAutomaton](###QiskitQuantumFiniteStateAutomaton).
+[QiskitQuantumFiniteStateAutomaton](#qiskitquantumfinitestateautomaton).
 
 * Constructor
   ```
