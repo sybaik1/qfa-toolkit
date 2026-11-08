@@ -158,6 +158,17 @@ class TestMeasureOnceQuantumFiniteStateAutomaton(unittest.TestCase):
                     self.assertNotAlmostEqual(
                         m1(counter_example), m2(counter_example))
 
+    def test_to_measure_many_quantum_finite_state_automaton(self):
+        for k in self.qfa_parameters:
+            m = self.get_moqfa(k)
+            mm = m.to_measure_many_quantum_finite_state_automaton()
+            self.assertTrue(mm.is_end_decisive())
+            self.assertTrue(mm.is_co_end_decisive())
+            ws = iterate_length_less_than_n_strings(
+                m.alphabet, self.max_string_len)
+            for w in ws:
+                self.assertAlmostEqual(mm(w), m(w))
+
     def test_equivalence(self):
         return
         for k1, k2 in itertools.product(self.qfa_parameters, repeat=2):

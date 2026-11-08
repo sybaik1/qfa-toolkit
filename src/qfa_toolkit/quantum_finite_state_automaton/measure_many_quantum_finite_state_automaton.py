@@ -153,7 +153,7 @@ class MeasureManyQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
 
     @classmethod
     def linear_combination(
-        cls: MmqfaT,
+        cls: type[MmqfaT],
         *mmqfas: MmqfaT,
         coefficients: Optional[list[float]] = None
     ) -> MmqfaT:
@@ -253,8 +253,9 @@ class MeasureManyQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         Alex Brodsky and Nicholas Pippenger. 2002. Characterizations of 1-way
         Quantum Finite Automata. SIAM Journal on Computing.
         """
-        adjacency = sum(
-            abs(self.transitions[:-1]) + np.eye(self.states)).astype(bool)
+        adjacency = (
+            np.sum(np.abs(self.transitions[:-1]), axis=0) + np.eye(self.states)
+        ).astype(bool)
         connected = np.linalg.matrix_power(adjacency, self.states)[0]
         return not any(self.accepting_states & connected)
 
@@ -267,8 +268,9 @@ class MeasureManyQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         Alex Brodsky and Nicholas Pippenger. 2002. Characterizations of 1-way
         Quantum Finite Automata. SIAM Journal on Computing.
         """
-        adjacency = sum(
-            abs(self.transitions[:-1]) + np.eye(self.states)).astype(bool)
+        adjacency = (
+            np.sum(np.abs(self.transitions[:-1]), axis=0) + np.eye(self.states)
+        ).astype(bool)
         connected = np.linalg.matrix_power(adjacency, self.states)[0]
         return not any(self.rejecting_states & connected)
 

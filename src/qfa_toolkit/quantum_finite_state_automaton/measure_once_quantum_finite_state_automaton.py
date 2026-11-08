@@ -133,7 +133,7 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
 
     @classmethod
     def linear_combination(
-        cls: MoqfaT,
+        cls: type[MoqfaT],
         *moqfas: MoqfaT,
         coefficients: Optional[list[float]] = None
     ) -> MoqfaT:
@@ -227,9 +227,7 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         return self.__class__(transitions, self.accepting_states)
 
     def to_measure_many_quantum_finite_state_automaton(self) -> Mmqfa:
-        # TODO: Test this method
         moqfa = self.to_without_final_transition()
-        states = self.states * 2
         transitions = np.stack([
             direct_sum(transition, transition)
             for transition in moqfa.transitions
@@ -239,10 +237,12 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
             {state + self.states: state for state in range(self.states)})
         final_transition = mapping_to_transition(mapping)
         transitions[moqfa.end_of_string] = final_transition
-        accepting_states = np.zeros(states, dtype=bool)
-        accepting_states[moqfa.accepting_states + self.states] = True
-        rejecting_states = np.zeros(states, dtype=bool)
-        rejecting_states[moqfa.rejecting_states + self.states] = True
+        accepting_states = np.concatenate(
+            [np.zeros(self.states, dtype=bool), moqfa.accepting_states]
+        )
+        rejecting_states = np.concatenate(
+            [np.zeros(self.states, dtype=bool), moqfa.rejecting_states]
+        )
         return Mmqfa(transitions, accepting_states, rejecting_states)
 
     def to_without_final_transition(self: MoqfaT) -> MoqfaT:
@@ -328,7 +328,7 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         ])
         accepting_states = np.zeros(self.states ** 2, dtype=bool)
         indices = self.accepting_states.nonzero()[0]
-        accepting_states[[i * i for i in indices]] = True
+        accepting_states[[i * self.states + i for i in indices]] = True
         return self.__class__(bilinear_transitions, accepting_states)
 
     def to_stochastic(self: MoqfaT) -> MoqfaT:
@@ -345,7 +345,7 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
 
         return self.bilinearize().to_real_valued()
 
-    def counter_example(self, other: MoqfaT) -> Optional[list[int]]:
+    def counter_example(self: MoqfaT, other: MoqfaT) -> Optional[list[int]]:
         """Returns a counter example of the equivalence of the measure-once
         quantum finite automaton.
 
@@ -355,9 +355,9 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         Lvzhou Li and Daowen Qiu. 2009. A note on quantum sequential machines.
         Theoretical Computer Science (TCS'09).
         """
-        self = self.to_bilinear()
-        other = other.to_bilinear()
-        m = self.__class__.linear_combination(self, other)
+        self_bi = self.to_bilinear()
+        other_bi = other.to_bilinear()
+        m = self.__class__.linear_combination(self_bi, other_bi)
 
         empty_string: list[int] = []
         # TODO: Implement a trie
@@ -386,11 +386,11 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
 
         for w, basis_vector in zip(ws, basis):
             basis_vector *= math.sqrt(2)  # normalize
-            total_state_1 = TotalState(basis_vector[:self.states])
-            total_state_2 = TotalState(basis_vector[self.states:])
+            total_state_1 = TotalState(basis_vector[:self_bi.states])
+            total_state_2 = TotalState(basis_vector[self_bi.states:])
 
-            x = total_state_1.measure_by(self.observable).acceptance
-            y = total_state_2.measure_by(other.observable).acceptance
+            x = total_state_1.measure_by(self_bi.observable).acceptance
+            y = total_state_2.measure_by(other_bi.observable).acceptance
             is_equal = math.isclose(x, y, abs_tol=1e-9)
             if not is_equal:
                 return w
