@@ -1,6 +1,7 @@
 import unittest
 
-from qiskit.providers.basic_provider import BasicSimulator  # type: ignore
+from qiskit import transpile  # type: ignore
+from qiskit_aer import AerSimulator  # type: ignore
 from scipy.stats import chisquare  # type: ignore
 
 import qfa_toolkit.qiskit_converter as qc
@@ -14,7 +15,7 @@ Result = rs.RecognitionStrategy.Result
 class TestQiskitCircuit(unittest.TestCase):
 
     def setUp(self):
-        self.simulator = BasicSimulator()
+        self.simulator = AerSimulator()
 
     def test_qiskit_measure_once_quantum_finite_state_automaton_circuit(self):
         shots = 10000
@@ -25,7 +26,9 @@ class TestQiskitCircuit(unittest.TestCase):
 
             for n in range(5):
                 w = [1] * n
-                circuit = qc_moqfa.get_circuit_for_string(w)
+                circuit = transpile(
+                    qc_moqfa.get_circuit_for_string(w), self.simulator
+                )
                 job = self.simulator.run(circuit, shots=shots)
                 result = job.result()
                 counts = {
@@ -67,7 +70,9 @@ class TestQiskitCircuit(unittest.TestCase):
 
             for n in range(5):
                 w = [1] * n
-                circuit = qc_mmqfa.get_circuit_for_string(w)
+                circuit = transpile(
+                    qc_mmqfa.get_circuit_for_string(w), self.simulator
+                )
                 job = self.simulator.run(circuit, shots=shots)
                 result = job.result()
                 counts = {

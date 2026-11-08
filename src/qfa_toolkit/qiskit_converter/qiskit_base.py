@@ -45,10 +45,10 @@ class QiskitQuantumFiniteStateAutomaton(abc.ABC):
     def reverse_mapping(self) -> dict[int, int]:
         return {v: k for k, v in self.mapping.items()}
 
-    def get_size(self):
+    def get_size(self) -> None:
         self.size = math.ceil(math.log2(self.qfa.states))
 
-    def get_mapping(self):
+    def get_mapping(self) -> None:
         pass
 
     def _transition_to_circuit(self, transition, character: str):
