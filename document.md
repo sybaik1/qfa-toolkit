@@ -1,26 +1,26 @@
- # Toolkit Documentation
+# Toolkit Documentation
 
- ## qfa\_toolkit.quantum\_finite\_state\_automaton
+## qfa\_toolkit.quantum\_finite\_state\_automaton
 
- ### Superposition
+### Superposition
 
- A type-alias of `ndarray[Any, cdouble]` for superposition.
+A type-alias of `ndarray[Any, cdouble]` for superposition.
 
- Implicitly, it represents an `n`-dimensional vector whose norm is 1, where `n`
- is the number of states.
+Implicitly, it represents an `n`-dimensional vector whose norm is 1, where `n`
+is the number of states.
 
- ### States
+### States
 
- A type-alias of `ndarray[Any, bool]` for a set of states.
+A type-alias of `ndarray[Any, bool]` for a set of states.
 
- Implicitly, it represents a set of states with one-hot encoding.
+Implicitly, it represents a set of states with one-hot encoding.
 
- ### Transitions
+### Transitions
 
- A type-alias of `ndarray[Any, cdouble]` for a set of transition matrices.
+A type-alias of `ndarray[Any, cdouble]` for a set of transition matrices.
 
- Implicitly, it is an `(m, n, n)`-shaped array and each `(n,n)`-shaped subarray
- is [Transition](#transition).
+Implicitly, it is an `(m, n, n)`-shaped array and each `(n, n)`-shaped subarray
+is [Transition](#transition).
 
 ### Transition
 
@@ -32,8 +32,8 @@ Implicitly, its shape is `(n, n)` and it denotes a unitary transition matrix.
 
 A type-alias of `ndarray[Any, bool]` for an observable.
 
-Implicitly, it is a `(3,n)`-shaped array and each `n`-shaped subarray is
-[States](#states) which denotes accepting, rejecting or non-halting states,
+Implicitly, it is a `(3, n)`-shaped array and each `n`-shaped subarray is
+[States](#states) which denotes accepting, rejecting, or non-halting states,
 respectively.
 
 ### TotalState
@@ -119,7 +119,7 @@ Abbreviation: MOQFA
   intersection(other: MOQFA) -> MOQFA
   # Hadamard product.
 
-  complement(other: MOQFA) -> MOQFA
+  complement() -> MOQFA
 
   linear_combination(
     *moqfas: MOQFA,
@@ -131,14 +131,14 @@ Abbreviation: MOQFA
   word_quotient(w: list[int]) -> MOQFA
   inverse_homomorphism(phi: list[list[int]]) -> MOQFA
   to_measure_many_quantum_finite_state_automaton() -> MMQFA
-  to_without_final_transition() -> MMQFA
-  to_without_initial_transition() -> MMQFA
-  to_real_valued() -> MMQFA
-  to_bilinear() -> MMQFA
-  to_stochastic() -> MMQFA
+  to_without_final_transition() -> MOQFA
+  to_without_initial_transition() -> MOQFA
+  to_real_valued() -> MOQFA
+  to_bilinear() -> MOQFA
+  to_stochastic() -> MOQFA
 
   counter_example(other: MOQFA) -> list[int] | None
-  # Return a string w such that fM(w) ̸= fN(w).
+  # Return a string w such that fM(w) != fN(w).
   # If there is no such string, then return None.
 
   equivalence(other: MOQFA) -> bool
@@ -155,7 +155,7 @@ Abbreviation: MMQFA
 * Constructor
   ```
   MeasureManyQuantumFiniteStateAutomaton(
-    ansitions: Transitions,
+    transition: Transitions,
     accepting_states: States,
     rejecting_states: States
   )
@@ -170,18 +170,16 @@ Abbreviation: MMQFA
   ```
 * Methods
   ```
-  word_transition(w: list[int]) -> Transition
-
   union(other: MMQFA) -> MMQFA
-  # Complement of Hadamard product of complements.
+  # Complement of Hadamard product of complements (for co-end-decisive MMQFAs).
 
   intersection(other: MMQFA) -> MMQFA
-  # Hadamard product.
+  # Hadamard product (for end-decisive MMQFAs).
 
-  complement(other: MMQFA) -> MMQFA
+  complement() -> MMQFA
 
   linear_combination(
-    *moqfas: MMQFA,
+    *mmqfas: MMQFA,
     coefficients: list[float] | None = None
   ) -> MMQFA
   # Class method.
@@ -233,12 +231,13 @@ Abbreviation: MOQFL
 
 * Methods
   ```
-  intersection(other: MOQFL) -> MOQFL
+  intersection(other: MOQFL, use_linear_combination: bool = True) -> MOQFL
   union(other: MOQFL) -> MOQFL
-  word_quotient(w: MOQFL) -> MOQFL
+  word_quotient(w: list[int]) -> MOQFL
   inverse_homomorphism(phi: list[list[int]]) -> MOQFL
+  to_measure_many_quantum_finite_state_automaton_language() -> MMQFL
 
-  from_modulo(n: int) -> MOQFL
+  from_modulo(n: int, d: int = 1) -> MOQFL
   # Class method.
 
   from_modulo_prime(
@@ -247,7 +246,7 @@ Abbreviation: MOQFL
     seed: int = 42,
   ) -> MOQFL
   # Class method.
-  # If copy_num is 0, use 8 log p instead.
+  # If copy_num is 0, use ceil(8 ln p) instead.
   ```
 
 ### MeasureManyQuantumFiniteStateAutomatonLanguage
@@ -271,21 +270,21 @@ Abbreviation: MMQFL
   # Class method.
 
   from_unary_singleton(
-    k: list[int],
+    k: int,
     params: Optional[tuple[float, float]] = None
   ) -> MMQFL
   # Class method.
   ```
 
-## qfa\_toolkit.quantum\_finite\_state\_automaton\_language
+## qfa\_toolkit.qiskit\_converter
 
 ### QiskitQuantumFiniteStateAutomaton
 
 Abstract class for Qiskit interface.
 
-* Propeties
+* Properties
   ```
-  qfa: QauntumFiniteStateAutomatonBase
+  qfa: QuantumFiniteStateAutomatonBase
 
   size: int
   # The number of qubits
@@ -303,7 +302,7 @@ Abstract class for Qiskit interface.
   ```
 * Methods
   ```
-  get_circuit_for_string(w: list[int]) -> None
+  get_circuit_for_string(w: list[int]) -> QuantumCircuit
   ```
 
 ### QiskitMeasureManyQuantumFiniteStateAutomaton
@@ -317,12 +316,12 @@ Subclass of
   ```
   QiskitMeasureManyQuantumFiniteStateAutomaton(
     qfa: MMQFA,
-    use_entropy_mapping: bool = True
+    use_density_mapping: bool = True
   )
   ```
 * Properties
   ```
-  halting_states: int
+  halting_states: set[int]
   ```
 
 ### QiskitMeasureOnceQuantumFiniteStateAutomaton
@@ -336,6 +335,6 @@ Subclass of
   ```
   QiskitMeasureOnceQuantumFiniteStateAutomaton(
     qfa: MOQFA,
-    use_entropy_mapping: bool = True
+    use_density_mapping: bool = True
   )
   ```
