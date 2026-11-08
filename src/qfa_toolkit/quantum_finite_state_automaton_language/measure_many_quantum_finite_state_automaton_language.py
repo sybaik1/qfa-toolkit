@@ -46,10 +46,10 @@ class MeasureManyQuantumFiniteStateAutomatonLanguage(Qfl[Mmqfa, NegOneSided]):
 
     @classmethod
     def from_unary_finite(
-        cls,
+        cls: type[MmqflT],
         ks: list[int],
         params: Optional[tuple[float, float]] = None
-    ) -> "MeasureManyQuantumFiniteStateAutomatonLanguage[NegOneSided]":
+    ) -> MmqflT:
         qfls = map(lambda k: cls.from_unary_singleton(k, params), ks)
         return reduce(cls.union, qfls)
 
@@ -61,10 +61,16 @@ class MeasureManyQuantumFiniteStateAutomatonLanguage(Qfl[Mmqfa, NegOneSided]):
 
         if params is None:
             theta, phi = cls._find_unary_singleton_parameters(k)
+        else:
+            theta, phi = params
         N = math.ceil(
-            1 / ((1-math.cos(theta)**2) * (1 - math.cos(phi))**2) +
-            1 / (math.cos(theta)**2*math.cos(phi)**2*k*(1 - math.cos(phi))**2)
-        ) - 1
+            1 / ((1 - math.cos(theta)**2) * (1 - math.cos(phi))**2) +
+            1 / (
+                math.cos(theta)**2
+                * (math.cos(phi)**(2 * k))
+                * (1 - math.cos(phi))**2
+            )
+        )
         return N
 
     @classmethod
@@ -80,10 +86,10 @@ class MeasureManyQuantumFiniteStateAutomatonLanguage(Qfl[Mmqfa, NegOneSided]):
 
     @classmethod
     def from_unary_singleton(
-        cls,
+        cls: type[MmqflT],
         k: int,
         params: Optional[tuple[float, float]] = None
-    ) -> "MeasureManyQuantumFiniteStateAutomatonLanguage[NegOneSided]":
+    ) -> MmqflT:
         if params is None:
             params = cls._find_unary_singleton_parameters(k)
 
@@ -135,4 +141,4 @@ class MeasureManyQuantumFiniteStateAutomatonLanguage(Qfl[Mmqfa, NegOneSided]):
         epsilon = reject_probability / 2
         strategy = NegOneSided(epsilon)
 
-        return MeasureManyQuantumFiniteStateAutomatonLanguage(mmqfa, strategy)
+        return cls(mmqfa, strategy)

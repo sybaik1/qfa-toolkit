@@ -60,5 +60,13 @@ class TestMeasureManyQuantumFiniteStateAutomatonLanguage(unittest.TestCase):
             self.assertEqual(language, target)
 
 
+    def test_find_unary_constant_margin(self):
+        for k in range(1, 8):
+            N = Mmqfl._find_unary_constant_margin(k)
+            self.assertGreater(N, 1)
+            qfl = Mmqfl.from_unary_singleton(k)
+            self.assertGreaterEqual(N, int(1 / (2 * qfl.strategy.epsilon)))
+
+
 if __name__ == '__main__':
     unittest.main()
