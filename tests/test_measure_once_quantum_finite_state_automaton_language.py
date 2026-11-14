@@ -13,6 +13,9 @@ class TestMeasureOnceQuantumFiniteStateAutomatonLanguage(unittest.TestCase):
             for j in range(10 * n):
                 w = [1] * j
                 self.assertEqual(len(w) % n == 0, w in moqfl, f"n={n}, j={j}")
+        mod_3 = Moqfl.from_modulo(3)
+        self.assertAlmostEqual(mod_3.strategy.epsilon, 0.75)
+        self.assertNotIn([1], mod_3)
 
     def test_modulo_prime(self):
         for p in [3, 5, 7, 11, 13, 17, 19]:
@@ -38,15 +41,21 @@ class TestMeasureOnceQuantumFiniteStateAutomatonLanguage(unittest.TestCase):
     def test_composed_modulo_and_singleton(self):
         mod_3 = Moqfl.from_modulo(3)
         mod_5 = Moqfl.from_modulo(5)
-        mod_15 = mod_3.intersection(mod_5, use_linear_combination=False)
-        mm_mod_15 = mod_15.to_measure_many_quantum_finite_state_automaton_language()
+        mod_15 = mod_3 & mod_5
         equ_4 = Mmqfl.from_unary_singleton(4)
-        composed = mm_mod_15 | equ_4
+        composed = mod_15 | equ_4
+        composed_rev = equ_4 | mod_15
+        self.assertEqual(composed.quantum_finite_state_automaton.states, 16)
+        self.assertTrue(
+            composed.quantum_finite_state_automaton.is_co_end_decisive()
+        )
+        self.assertLess(abs(composed.strategy.epsilon - 8.541e-4), 1e-6)
+        self.assertEqual(composed_rev.quantum_finite_state_automaton.states, 16)
         for j in range(31):
             w = [1] * j
-            self.assertEqual(
-                (j % 15 == 0) or (j == 4), w in composed, f"j={j}"
-            )
+            expected = (j % 15 == 0) or (j == 4)
+            self.assertEqual(expected, w in composed, f"j={j}")
+            self.assertEqual(expected, w in composed_rev, f"j={j}")
 
 
 if __name__ == '__main__':

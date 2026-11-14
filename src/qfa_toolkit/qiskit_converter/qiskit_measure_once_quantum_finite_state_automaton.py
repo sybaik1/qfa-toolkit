@@ -62,7 +62,7 @@ class QiskitMeasureOnceQuantumFiniteStateAutomaton(
         for index, state in enumerate(rejecting_indices):
             new_mapping[state] = state_order[
                     index + accepting_states_num]
-        for index, state in enumerate(self.undefined_states):
+        for index, state in enumerate(range(self.qfa.states, 2 ** self.size)):
             new_mapping[state] = state_order[
                     index + accepting_states_num + rejecting_states_num]
 
@@ -74,6 +74,7 @@ class QiskitMeasureOnceQuantumFiniteStateAutomaton(
         self.rejecting_states = {
             self.mapping[state] for state in rejecting_indices
         }
+        self.transitions_to_circuit(self.qfa.transitions)
 
     def get_density_mapping(self) -> None:
         state_order = [
@@ -92,7 +93,7 @@ class QiskitMeasureOnceQuantumFiniteStateAutomaton(
             new_mapping[state] = state_order[index]
         for index, state in enumerate(rejecting_indices):
             new_mapping[state] = state_order[-index-1]
-        for index, state in enumerate(self.undefined_states):
+        for index, state in enumerate(range(self.qfa.states, 2 ** self.size)):
             new_mapping[state] = state_order[
                     index + len(accepting_indices)]
 
@@ -113,6 +114,7 @@ class QiskitMeasureOnceQuantumFiniteStateAutomaton(
         creg_states = ClassicalRegister(self.size, 'c_state')
 
         circuit = QuantumCircuit(qreg_states, creg_states)
+        self._prepare_initial_state(circuit, qreg_states)
 
         for c in [self.qfa.start_of_string] + w + [self.qfa.end_of_string]:
             circuit.append(self.circuit[c], qreg_states)

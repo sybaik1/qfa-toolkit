@@ -51,6 +51,8 @@ Class for total state in quantum finite-state automaton.
 * Properties
   ```
   superposition: Superposition
+  acceptance: float
+  rejection: float
   ```
 * Methods
   ```
@@ -79,9 +81,12 @@ Abstract class for quantum finite-state automaton.
   ```
 * Methods
   ```
+  __call__(w: list[int]) -> float
+  # Return the acceptance probability f_M(w).
+
   process(
     w: list[int],
-    total_state: TotalState | None
+    total_state: TotalState | None = None
   ) -> TotalState
 
   step(total_state: TotalState, c: int) -> TotalState
@@ -113,13 +118,20 @@ Abbreviation: MOQFA
   ```
   word_transition(w: list[int]) -> Transition
 
-  union(other: MOQFA) -> MOQFA
+  union(other: MOQFA | MMQFA) -> MOQFA | MMQFA
+  __or__(other: MOQFA | MMQFA) -> MOQFA | MMQFA
   # Complement of Hadamard product of complements.
+  # Supports MOQFA | MMQFA for co-end-decisive MMQFAs, returning an
+  # mn-state co-end-decisive MMQFA.
 
-  intersection(other: MOQFA) -> MOQFA
+  intersection(other: MOQFA | MMQFA) -> MOQFA | MMQFA
+  __and__(other: MOQFA | MMQFA) -> MOQFA | MMQFA
   # Hadamard product.
+  # Supports MOQFA & MMQFA for end-decisive MMQFAs, returning an
+  # mn-state end-decisive MMQFA.
 
   complement() -> MOQFA
+  __invert__() -> MOQFA
 
   linear_combination(
     *moqfas: MOQFA,
@@ -142,6 +154,7 @@ Abbreviation: MOQFA
   # If there is no such string, then return None.
 
   equivalence(other: MOQFA) -> bool
+  __eq__(other: object) -> bool
   ```
 
 ### MeasureManyQuantumFiniteStateAutomaton
@@ -170,13 +183,18 @@ Abbreviation: MMQFA
   ```
 * Methods
   ```
-  union(other: MMQFA) -> MMQFA
-  # Complement of Hadamard product of complements (for co-end-decisive MMQFAs).
+  union(other: MMQFA | MOQFA) -> MMQFA
+  __or__(other: MMQFA | MOQFA) -> MMQFA
+  # Complement of Hadamard product of complements (requires co-end-decisive
+  # MMQFA operands). Supports mixed MMQFA | MOQFA.
 
-  intersection(other: MMQFA) -> MMQFA
-  # Hadamard product (for end-decisive MMQFAs).
+  intersection(other: MMQFA | MOQFA) -> MMQFA
+  __and__(other: MMQFA | MOQFA) -> MMQFA
+  # Hadamard product (requires end-decisive MMQFA operands).
+  # Supports mixed MMQFA & MOQFA.
 
   complement() -> MMQFA
+  __invert__() -> MMQFA
 
   linear_combination(
     *mmqfas: MMQFA,
@@ -184,6 +202,12 @@ Abbreviation: MMQFA
   ) -> MMQFA
   # Class method.
   # Default coefficients are 1/N for N MMQFAs.
+
+  word_quotient(w: list[int]) -> MMQFA
+  # Return word quotient MMQFA of size n + |w| * n_halt.
+
+  inverse_homomorphism(phi: list[list[int]]) -> MMQFA
+  # Return inverse homomorphism MMQFA of size at most n + c(h) * n_halt.
 
   is_end_decisive() -> bool
   is_co_end_decisive() -> bool
@@ -231,21 +255,30 @@ Abbreviation: MOQFL
 
 * Methods
   ```
-  intersection(other: MOQFL, use_linear_combination: bool = True) -> MOQFL
-  union(other: MOQFL) -> MOQFL
+  intersection(
+    other: MOQFL | MMQFL,
+    use_linear_combination: bool = True
+  ) -> MOQFL | MMQFL
+  __and__(other: MOQFL | MMQFL) -> MOQFL | MMQFL
+
+  union(other: MOQFL | MMQFL) -> MOQFL | MMQFL
+  __or__(other: MOQFL | MMQFL) -> MOQFL | MMQFL
+  # Supports direct MOQFL | MMQFL for co-end-decisive MMQFLs (producing an
+  # mn-state MMQFL).
+
   word_quotient(w: list[int]) -> MOQFL
   inverse_homomorphism(phi: list[list[int]]) -> MOQFL
   to_measure_many_quantum_finite_state_automaton_language() -> MMQFL
 
   from_modulo(n: int, d: int = 1) -> MOQFL
-  # Class method.
+  # Class method. Margin is sin^2(pi / n).
 
   from_modulo_prime(
     p: int,
     copy_num: int = 0,
     seed: int = 42,
   ) -> MOQFL
-  # Class method.
+  # Class method. Margin is 1/8.
   # If copy_num is 0, use ceil(8 ln p) instead.
   ```
 
@@ -260,8 +293,15 @@ Abbreviation: MMQFL
 
 * Methods
   ```
-  intersection(other: MMQFL) -> MMQFL
-  union(other: MMQFL) -> MMQFL
+  intersection(other: MMQFL | MOQFL) -> MMQFL
+  __and__(other: MMQFL | MOQFL) -> MMQFL
+
+  union(other: MMQFL | MOQFL) -> MMQFL
+  __or__(other: MMQFL | MOQFL) -> MMQFL
+  # Requires co-end-decisive MMQFL operands. Supports mixed MMQFL | MOQFL.
+
+  word_quotient(w: list[int]) -> MMQFL
+  inverse_homomorphism(phi: list[list[int]]) -> MMQFL
 
   from_unary_finite(
     ks: list[int],
@@ -273,8 +313,70 @@ Abbreviation: MMQFL
     k: int,
     params: Optional[tuple[float, float]] = None
   ) -> MMQFL
-  # Class method.
+  # Class method. Uses optimal margin parameters by default when params is None.
   ```
+
+## qfa\_toolkit.recognition\_strategy
+
+### RecognitionStrategy
+
+Base class mapping acceptance probability $f_M(w) \in [0, 1]$ to
+`RecognitionStrategy.Result` (`ACCEPT`, `REJECT`, `INVALID`).
+
+* Enum `RecognitionStrategy.Result`: `ACCEPT`, `REJECT`, `INVALID`
+* Constructor
+  ```
+  RecognitionStrategy(
+    reject_upperbound: float,
+    accept_lowerbound: float,
+    reject_inclusive: bool = False,
+    accept_inclusive: bool = False
+  )
+  ```
+* Methods
+  ```
+  __call__(probability: float) -> RecognitionStrategy.Result
+  __str__() -> str
+  ```
+
+### CutPoint
+
+Cut-point acceptance policy: rejects $f_M(w) \le \lambda$ and accepts
+$f_M(w) > \lambda$.
+
+Subclass of [RecognitionStrategy](#recognitionstrategy).
+
+* Constructor: `CutPoint(probability: float)`
+
+### IsolatedCutPoint
+
+Isolated cut-point acceptance policy with threshold $\lambda$ and isolation
+margin $\varepsilon > 0$.
+
+Subclass of [RecognitionStrategy](#recognitionstrategy).
+
+* Constructor: `IsolatedCutPoint(threshold: float, epsilon: float)`
+* Properties: `threshold: float`, `epsilon: float`
+
+### PositiveOneSidedBoundedError
+
+Positive one-sided bounded-error policy: rejects $f_M(w) = 0$ and accepts
+$f_M(w) \ge \varepsilon$.
+
+Subclass of [RecognitionStrategy](#recognitionstrategy).
+
+* Constructor: `PositiveOneSidedBoundedError(epsilon: float)`
+* Properties: `epsilon: float`
+
+### NegativeOneSidedBoundedError
+
+Negative one-sided bounded-error policy: accepts $f_M(w) = 1$ and rejects
+$f_M(w) \le 1 - \varepsilon$.
+
+Subclass of [RecognitionStrategy](#recognitionstrategy).
+
+* Constructor: `NegativeOneSidedBoundedError(epsilon: float)`
+* Properties: `epsilon: float`
 
 ## qfa\_toolkit.qiskit\_converter
 
@@ -307,7 +409,8 @@ Abstract class for Qiskit interface.
 
 ### QiskitMeasureManyQuantumFiniteStateAutomaton
 
-Class for generating Qiskit circuits from MMQFAs.
+Class for generating Qiskit circuits from MMQFAs (preparing $|\phi(q_{\text{init}})\rangle$
+when $\phi(0) \ne |0\cdots 0\rangle$ and using mid-circuit halting-flag readout with `if_test`).
 
 Subclass of
 [QiskitQuantumFiniteStateAutomaton](#qiskitquantumfinitestateautomaton).
@@ -321,12 +424,22 @@ Subclass of
   ```
 * Properties
   ```
+  accepting_states: set[int]
+  rejecting_states: set[int]
+  non_halting_states: set[int]
   halting_states: set[int]
+  ```
+* Methods
+  ```
+  get_density_mapping() -> None
+  get_mapping() -> None
+  get_circuit_for_string(w: list[int]) -> QuantumCircuit
   ```
 
 ### QiskitMeasureOnceQuantumFiniteStateAutomaton
 
-Class for generating Qiskit circuits from MOQFAs.
+Class for generating Qiskit circuits from MOQFAs (preparing $|\phi(q_{\text{init}})\rangle$
+when $\phi(0) \ne |0\cdots 0\rangle$).
 
 Subclass of
 [QiskitQuantumFiniteStateAutomaton](#qiskitquantumfinitestateautomaton).
@@ -337,4 +450,16 @@ Subclass of
     qfa: MOQFA,
     use_density_mapping: bool = True
   )
+  ```
+* Properties
+  ```
+  accepting_states: set[int]
+  rejecting_states: set[int]
+  ```
+* Methods
+  ```
+  get_density_mapping() -> None
+  get_random_mapping(seed: int = 42) -> None
+  get_mapping() -> None
+  get_circuit_for_string(w: list[int]) -> QuantumCircuit
   ```

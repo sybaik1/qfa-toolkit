@@ -6,7 +6,7 @@ name = "qfa-toolkit"
 authors = [
   {name = "SeungYeop Baik", email = "sybaik2006@gmail.com"},
   {name = "Sicheol Sung", email = "sicheol.sung@yonsei.ac.kr"},
-  {name = "Sungmin Kim", email = "rena_rio@yonsei.ac.kr"},
+  {name = "Yo-Sub Han", email = "emmous@yonsei.ac.kr"},
 ]
 dependencies = [
   "numpy>=2.0.0",

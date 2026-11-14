@@ -29,17 +29,25 @@ class RecognitionStrategy:
 
     def __call__(self, probability: float) -> Result:
 
-        if probability < 0.0 or probability > 1.0:
+        if probability < -1e-9 or probability > 1.0 + 1e-9:
             raise ValueError(
                 "Probability must be between 0.0 and 1.0, "
                 f"but probability is {probability}."
             )
+        probability = min(1.0, max(0.0, probability))
+
+        gap = self.accept_lowerbound - self.reject_upperbound
+        tol = min(1e-9, gap / 4.0) if gap > 0 else 1e-9
 
         if self.reject_inclusive:
-            if math.isclose(probability, self.reject_upperbound, abs_tol=1e-9):
+            if math.isclose(
+                probability, self.reject_upperbound, rel_tol=0.0, abs_tol=tol
+            ):
                 return RecognitionStrategy.Result.REJECT
         if self.accept_inclusive:
-            if math.isclose(probability, self.accept_lowerbound, abs_tol=1e-9):
+            if math.isclose(
+                probability, self.accept_lowerbound, rel_tol=0.0, abs_tol=tol
+            ):
                 return RecognitionStrategy.Result.ACCEPT
 
         if probability < self.reject_upperbound:
@@ -86,7 +94,7 @@ class PositiveOneSidedBoundedError(RecognitionStrategy):
     def __init__(self, epsilon: float) -> None:
         if epsilon > 1.0:
             raise ValueError("epsilon must be at most 1.0")
-        super().__init__(0.0, epsilon, True, False)
+        super().__init__(0.0, epsilon, True, True)
 
     @property
     def epsilon(self) -> float:
@@ -97,7 +105,7 @@ class NegativeOneSidedBoundedError(RecognitionStrategy):
     def __init__(self, epsilon: float) -> None:
         if epsilon > 1.0:
             raise ValueError("epsilon must be at most 1.0")
-        super().__init__(1.0 - epsilon, 1.0, False, True)
+        super().__init__(1.0 - epsilon, 1.0, True, True)
 
     @property
     def epsilon(self) -> float:

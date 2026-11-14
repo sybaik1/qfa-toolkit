@@ -28,8 +28,8 @@ class QiskitMeasureManyQuantumFiniteStateAutomaton(
         rejecting_states: set[int]
         circuit: list[QuantumCircuit] # indexed by the alphabet
         size: int                     # size of the qubit register for states
-        mapping: dict[int, int]       # mapping from qubit register index
-                                        to qfa state
+        mapping: dict[int, int]       # mapping from QFA state index
+                                        to qubit basis index
         """
         self.qfa: Mmqfa = qfa
         self.get_size()
@@ -82,7 +82,7 @@ class QiskitMeasureManyQuantumFiniteStateAutomaton(
             new_mapping[state] = state_order[-index-1]
 
         half_size = 2 ** (self.size - 1)
-        for index, state in enumerate(self.undefined_states):
+        for index, state in enumerate(range(self.qfa.states, 2 ** self.size)):
             if index + len(non_halting_indices) < half_size:
                 new_mapping[state] = index + len(non_halting_indices)
             else:
@@ -127,7 +127,7 @@ class QiskitMeasureManyQuantumFiniteStateAutomaton(
             new_mapping[state] = index
         for index, state in enumerate(halting_indices):
             new_mapping[state] = index + half_size
-        for index, state in enumerate(self.undefined_states):
+        for index, state in enumerate(range(self.qfa.states, 2 ** self.size)):
             if index + len(non_halting_indices) < half_size:
                 new_mapping[state] = index + len(non_halting_indices)
             else:
@@ -150,6 +150,7 @@ class QiskitMeasureManyQuantumFiniteStateAutomaton(
         creg_states = ClassicalRegister(self.size, 'c_state')
 
         circuit = QuantumCircuit(qreg_states, creg_states)
+        self._prepare_initial_state(circuit, qreg_states)
 
         circuit.append(self.circuit[self.qfa.start_of_string], qreg_states)
         for c in w + [self.qfa.end_of_string]:

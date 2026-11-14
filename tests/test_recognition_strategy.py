@@ -26,13 +26,22 @@ class TestRecognitionStrategy(unittest.TestCase):
         s = rs.PositiveOneSidedBoundedError(0.75)
         self.assertEqual(s(0.0), Result.REJECT)
         self.assertEqual(s(0.5), Result.INVALID)
+        self.assertEqual(s(0.75), Result.ACCEPT)
         self.assertEqual(s(0.875), Result.ACCEPT)
 
     def test_negative_one_sided_bounded_error(self):
         s = rs.NegativeOneSidedBoundedError(0.75)
         self.assertEqual(s(0.125), Result.REJECT)
+        self.assertEqual(s(0.25), Result.REJECT)
         self.assertEqual(s(0.5), Result.INVALID)
         self.assertEqual(s(1.0), Result.ACCEPT)
+
+    def test_small_margin_boundary(self):
+        eps = 1e-11
+        s = rs.NegativeOneSidedBoundedError(eps)
+        self.assertEqual(s(1.0), Result.ACCEPT)
+        self.assertEqual(s(1.0 - eps), Result.REJECT)
+        self.assertEqual(s(1.0 - eps / 2), Result.INVALID)
 
 
 if __name__ == '__main__':
