@@ -85,8 +85,8 @@ We evaluate D-mapping against naive binary mapping on IBM Quantum **Eagle r3**
 and **Heron r2** processors and Qiskit Aer simulators configured with each
 processor's native gate set (`ECR, ID, RZ, SX, X` for Eagle; `CZ, ID, RX, RZ,
 RZZ, SX, X` for Heron), coupling topology, thermal relaxation ($T_1, T_2$), and
-scaled gate and readout mirroring factors $\eta_g, \eta_r \in \{0.1\%, 0.5\%,
-1.0\%\}$.
+scaled gate and readout mirroring factors ($\eta_g, \eta_r$) of `0.1%`, `0.5%`,
+and `1.0%`.
 
 On physical Eagle r3 and Heron r2 hardware, decomposing dense 5-qubit
 (`32 x 32`) `MOD_5` unitaries into native gates produces over 1,000 gates even
@@ -98,7 +98,7 @@ regardless of mapping:
 Using scaled-noise Qiskit Aer simulators to isolate the effect of D-mapping
 under near-term error rates:
 
-- **Per-string accuracy (`MOD_5`, $\eta_g = \eta_r = 0.5\%$):** D-mapping raises
+- **Per-string accuracy (`MOD_5`, $\eta_g = \eta_r$ at `0.5%`):** D-mapping raises
   acceptance on member strings and lowers false acceptance on non-members,
   reducing MAPE from `19.45%` to `17.90%` on Eagle and from `16.70%` to
   `15.77%` on Heron:
