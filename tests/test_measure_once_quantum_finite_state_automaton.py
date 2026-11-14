@@ -71,6 +71,13 @@ class TestMeasureOnceQuantumFiniteStateAutomaton(unittest.TestCase):
             self.qfa_parameters, self.max_string_len
         )
 
+    def test_to_bilinear_complemented(self) -> None:
+        m = ~get_arbitrary_moqfa(3)
+        b = m.to_bilinear()
+        for j in range(6):
+            w = [1] * j
+            self.assertAlmostEqual(b.bilinearized_call(w), m(w))
+
     def test_to_stochastic(self) -> None:
         def constraint(m: Moqfa) -> bool:
             return np.allclose(m.transitions.imag, 0)
@@ -158,14 +165,61 @@ class TestMeasureOnceQuantumFiniteStateAutomaton(unittest.TestCase):
                     self.assertNotAlmostEqual(
                         m1(counter_example), m2(counter_example))
 
+    def test_to_measure_many_quantum_finite_state_automaton(self):
+        for k in self.qfa_parameters:
+            m = self.get_moqfa(k)
+            mm = m.to_measure_many_quantum_finite_state_automaton()
+            self.assertTrue(mm.is_end_decisive())
+            self.assertTrue(mm.is_co_end_decisive())
+            ws = iterate_length_less_than_n_strings(
+                m.alphabet, self.max_string_len)
+            for w in ws:
+                self.assertAlmostEqual(mm(w), m(w))
+
     def test_equivalence(self):
-        return
         for k1, k2 in itertools.product(self.qfa_parameters, repeat=2):
             m1 = self.get_moqfa(k1)
             m2 = self.get_moqfa(k2)
             m2.transitions = multiply_arbitrary_global_phase(m2.transitions)
             self.assertEqual(m1 == m2, k1 == k2)
             self.assertEqual(m2 == m1, k2 == k1)
+            self.assertEqual(m1.equivalence(m2), k1 == k2)
+
+        m = self.get_moqfa(3)
+        self.assertTrue(m == Moqfa.linear_combination(m, m))
+        self.assertTrue(m.equivalence(m.to_real_valued()))
+        q = m.word_quotient([1])
+        self.assertTrue(q == q.to_without_initial_transition())
+
+    def test_mixed_moqfa_mmqfa_operations(self) -> None:
+        from qfa_toolkit.quantum_finite_state_automaton import (
+            NotClosedUnderOperationException)
+        from .utils import get_arbitrary_mmqfa
+
+        mo = self.get_moqfa(3)
+        mm_end = get_arbitrary_mmqfa(1 / 2)
+        mm_co = ~mm_end
+        for w in [[], [1], [1, 1], [1, 1, 1]]:
+            inter_lr = mo & mm_end
+            inter_rl = mm_end & mo
+            self.assertEqual(inter_lr.states, mo.states * mm_end.states)
+            self.assertAlmostEqual(inter_lr(w), mo(w) * mm_end(w))
+            self.assertAlmostEqual(inter_rl(w), mm_end(w) * mo(w))
+
+            union_lr = mo | mm_co
+            union_rl = mm_co | mo
+            self.assertEqual(union_lr.states, mo.states * mm_co.states)
+            self.assertAlmostEqual(
+                union_lr(w), 1.0 - (1.0 - mo(w)) * (1.0 - mm_co(w))
+            )
+            self.assertAlmostEqual(
+                union_rl(w), 1.0 - (1.0 - mm_co(w)) * (1.0 - mo(w))
+            )
+
+        with self.assertRaises(NotClosedUnderOperationException):
+            _ = mo & mm_co
+        with self.assertRaises(NotClosedUnderOperationException):
+            _ = mo | mm_end
 
 
 if __name__ == '__main__':

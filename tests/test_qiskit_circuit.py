@@ -1,6 +1,7 @@
 import unittest
 
-from qiskit.providers.basic_provider import BasicSimulator  # type: ignore
+from qiskit import transpile  # type: ignore
+from qiskit_aer import AerSimulator  # type: ignore
 from scipy.stats import chisquare  # type: ignore
 
 import qfa_toolkit.qiskit_converter as qc
@@ -14,7 +15,7 @@ Result = rs.RecognitionStrategy.Result
 class TestQiskitCircuit(unittest.TestCase):
 
     def setUp(self):
-        self.simulator = BasicSimulator()
+        self.simulator = AerSimulator()
 
     def test_qiskit_measure_once_quantum_finite_state_automaton_circuit(self):
         shots = 10000
@@ -25,7 +26,9 @@ class TestQiskitCircuit(unittest.TestCase):
 
             for n in range(5):
                 w = [1] * n
-                circuit = qc_moqfa.get_circuit_for_string(w)
+                circuit = transpile(
+                    qc_moqfa.get_circuit_for_string(w), self.simulator
+                )
                 job = self.simulator.run(circuit, shots=shots)
                 result = job.result()
                 counts = {
@@ -67,7 +70,9 @@ class TestQiskitCircuit(unittest.TestCase):
 
             for n in range(5):
                 w = [1] * n
-                circuit = qc_mmqfa.get_circuit_for_string(w)
+                circuit = transpile(
+                    qc_mmqfa.get_circuit_for_string(w), self.simulator
+                )
                 job = self.simulator.run(circuit, shots=shots)
                 result = job.result()
                 counts = {
@@ -98,6 +103,47 @@ class TestQiskitCircuit(unittest.TestCase):
 
                 chi_value = chisquare(observed, expected)
                 self.assertGreater(chi_value.pvalue, 0.05)
+
+    def test_qiskit_moqfa_nonzero_initial_state_mapping(self):
+        shots = 10000
+        moqfa = ~get_arbitrary_moqfa(3)
+        qc_moqfa = qc.QiskitMeasureOnceQuantumFiniteStateAutomaton(
+            moqfa, use_density_mapping=True
+        )
+        self.assertNotEqual(qc_moqfa.mapping[0], 0)
+
+        for n in range(6):
+            w = [1] * n
+            circuit = transpile(
+                qc_moqfa.get_circuit_for_string(w), self.simulator
+            )
+            counts = {
+                int(k, base=2): v
+                for k, v in self.simulator.run(circuit, shots=shots)
+                .result()
+                .get_counts()
+                .items()
+            }
+            observed_rejection = sum(
+                counts[state] for state in counts
+                if state in qc_moqfa.rejecting_states
+            )
+            observed_acceptance = sum(
+                counts[state] for state in counts
+                if state in qc_moqfa.accepting_states
+            )
+            expected_acceptance = int(round(moqfa(w) * shots))
+            expected_rejection = shots - expected_acceptance
+
+            if expected_acceptance == 0 or expected_rejection == 0:
+                self.assertEqual(observed_acceptance, expected_acceptance)
+                self.assertEqual(observed_rejection, expected_rejection)
+            else:
+                chi_value = chisquare(
+                    [observed_rejection, observed_acceptance],
+                    [expected_rejection, expected_acceptance],
+                )
+                self.assertGreater(chi_value.pvalue, 0.01)
 
 
 if __name__ == '__main__':

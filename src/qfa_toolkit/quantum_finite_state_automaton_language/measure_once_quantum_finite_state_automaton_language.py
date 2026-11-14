@@ -1,9 +1,12 @@
+import math
 import numpy as np
 from functools import reduce
-from typing import (TypeVar, )
+from typing import (TypeVar, Union, overload, )
 
 from .quantum_finite_state_automaton_language_base import (
     QuantumFiniteStateAutomatonLanguageBase as Qfl)
+from .measure_many_quantum_finite_state_automaton_language import (
+    MeasureManyQuantumFiniteStateAutomatonLanguage as Mmqfl)
 from ..quantum_finite_state_automaton import (
     MeasureOnceQuantumFiniteStateAutomaton as Moqfa)
 from ..quantum_finite_state_automaton.utils import (
@@ -16,66 +19,157 @@ MoqflT = TypeVar(
 
 class MeasureOnceQuantumFiniteStateAutomatonLanguage(Qfl[Moqfa, NegOneSided]):
 
-    def union(self, other: MoqflT) -> MoqflT:
-        qfa = (
+    @overload
+    def union(self: MoqflT, other: MoqflT) -> MoqflT: ...
+
+    @overload
+    def union(self, other: Mmqfl) -> Mmqfl: ...
+
+    def union(
+        self: MoqflT, other: Union[MoqflT, Mmqfl]
+    ) -> Union[MoqflT, Mmqfl]:
+        if isinstance(other, Mmqfl):
+            if not other.quantum_finite_state_automaton.is_co_end_decisive():
+                raise ValueError("QFAs must be co-end-decisive")
+            mm_qfa = (
+                self.quantum_finite_state_automaton
+                | other.quantum_finite_state_automaton
+            )
+            epsilon = self.strategy.epsilon * other.strategy.epsilon
+            return Mmqfl(mm_qfa, NegOneSided(epsilon))
+        mo_qfa = (
             self.quantum_finite_state_automaton
             | other.quantum_finite_state_automaton
         )
         epsilon = self.strategy.epsilon * other.strategy.epsilon
         strategy = NegOneSided(epsilon)
-        return self.__class__(qfa, strategy)
+        return self.__class__(mo_qfa, strategy)
 
-    def __or__(self, other: MoqflT) -> MoqflT:
+    @overload
+    def __or__(self: MoqflT, other: MoqflT) -> MoqflT: ...
+
+    @overload
+    def __or__(self, other: Mmqfl) -> Mmqfl: ...
+
+    def __or__(
+        self: MoqflT, other: Union[MoqflT, Mmqfl]
+    ) -> Union[MoqflT, Mmqfl]:
+        if isinstance(other, Mmqfl):
+            return self.union(other)
         return self.union(other)
 
-    def intersection(self, other: MoqflT) -> MoqflT:
-        qfa = (
-            self.quantum_finite_state_automaton
-            & other.quantum_finite_state_automaton
-        )
-        epsilon = (
-            1 - (1 - self.strategy.epsilon) * (1 - other.strategy.epsilon))
-        strategy = NegOneSided(epsilon)
-        return self.__class__(qfa, strategy)
+    @overload
+    def intersection(
+        self: MoqflT,
+        other: MoqflT,
+        use_linear_combination: bool = True
+    ) -> MoqflT: ...
 
-    def __and__(self, other: MoqflT) -> MoqflT:
+    @overload
+    def intersection(
+        self,
+        other: Mmqfl,
+        use_linear_combination: bool = True
+    ) -> Mmqfl: ...
+
+    def intersection(
+        self: MoqflT,
+        other: Union[MoqflT, Mmqfl],
+        use_linear_combination: bool = True
+    ) -> Union[MoqflT, Mmqfl]:
+        if isinstance(other, Mmqfl):
+            if use_linear_combination:
+                return (
+                    self.to_measure_many_quantum_finite_state_automaton_language()
+                    .intersection(other)
+                )
+            mm_qfa = (
+                self.quantum_finite_state_automaton
+                & other.quantum_finite_state_automaton
+            )
+            epsilon = min(self.strategy.epsilon, other.strategy.epsilon)
+            return Mmqfl(mm_qfa, NegOneSided(epsilon))
+        if use_linear_combination:
+            epsilon_1 = self.strategy.epsilon
+            epsilon_2 = other.strategy.epsilon
+            c = epsilon_2 / (epsilon_1 + epsilon_2)
+            qfa_1 = self.quantum_finite_state_automaton
+            qfa_2 = other.quantum_finite_state_automaton
+            mo_qfa = Moqfa.linear_combination(
+                qfa_1, qfa_2, coefficients=[c, 1 - c]
+            )
+            epsilon = (epsilon_1 * epsilon_2) / (epsilon_1 + epsilon_2)
+        else:
+            mo_qfa = (
+                self.quantum_finite_state_automaton
+                & other.quantum_finite_state_automaton
+            )
+            epsilon = min(self.strategy.epsilon, other.strategy.epsilon)
+        strategy = NegOneSided(epsilon)
+        return self.__class__(mo_qfa, strategy)
+
+    @overload
+    def __and__(self: MoqflT, other: MoqflT) -> MoqflT: ...
+
+    @overload
+    def __and__(self, other: Mmqfl) -> Mmqfl: ...
+
+    def __and__(
+        self: MoqflT, other: Union[MoqflT, Mmqfl]
+    ) -> Union[MoqflT, Mmqfl]:
+        if isinstance(other, Mmqfl):
+            return self.intersection(other)
         return self.intersection(other)
 
-    def word_quotient(self, w: list[int]) -> MoqflT:
+    def word_quotient(self: MoqflT, w: list[int]) -> MoqflT:
         qfa = self.quantum_finite_state_automaton.word_quotient(w)
         epsilon = self.strategy.epsilon
         strategy = NegOneSided(epsilon)
         return self.__class__(qfa, strategy)
 
-    def inverse_homomorphism(self, phi: list[list[int]]) -> MoqflT:
+    def inverse_homomorphism(self: MoqflT, phi: list[list[int]]) -> MoqflT:
         qfa = self.quantum_finite_state_automaton.inverse_homomorphism(phi)
         epsilon = self.strategy.epsilon
         strategy = NegOneSided(epsilon)
         return self.__class__(qfa, strategy)
 
+    def to_measure_many_quantum_finite_state_automaton_language(
+        self
+    ) -> Mmqfl:
+        mmqfa = (
+            self.quantum_finite_state_automaton
+            .to_measure_many_quantum_finite_state_automaton()
+        )
+        strategy = NegOneSided(self.strategy.epsilon)
+        return Mmqfl(mmqfa, strategy)
+
     @classmethod
-    def from_modulo(cls, n: int) -> MoqflT:
+    def from_modulo(cls: type[MoqflT], n: int, d: int = 1) -> MoqflT:
         """Create a quantum finite state automaton that recognizes the language
         of strings whose length is divisible by n.
         """
+        if n < 2:
+            raise ValueError("n must be at least 2.")
+        if math.gcd(n, d) != 1:
+            raise ValueError("n and d must be coprime.")
         states = 2
         initial_transition = np.eye(states, dtype=np.cdouble)
         final_transition = np.eye(states, dtype=np.cdouble)
-        phi = np.pi / n
+        phi = np.pi * d / n
         sigma_transition = np.array([
-            [np.cos(phi), 1j*np.sin(phi)],
-            [1j*np.sin(phi), np.cos(phi)],
+            [np.cos(phi), -np.sin(phi)],
+            [np.sin(phi), np.cos(phi)],
         ], dtype=np.cdouble)
         transitions = np.stack([
             initial_transition, sigma_transition, final_transition])
         acceptings = np.array([True, False])
         moqfa = Moqfa(transitions, acceptings)
-        epsilon = np.sin(phi) ** 2 / 2
+        epsilon = float(np.sin(np.pi / n) ** 2)
         return cls(moqfa, NegOneSided(epsilon))
 
     @classmethod
     def from_modulo_prime(
-            cls,
+            cls: type[MoqflT],
             p: int,
             copy_num: int = 0,
             seed: int = 42) -> MoqflT:
@@ -108,8 +202,8 @@ class MeasureOnceQuantumFiniteStateAutomatonLanguage(Qfl[Moqfa, NegOneSided]):
         # k automaton
         acceptings = np.array([1, 0]*copy_num, dtype=bool)
         sigma_k_transitions = [np.array([
-            [np.cos(phi), 1j*np.sin(phi)],
-            [1j*np.sin(phi), np.cos(phi)],
+            [np.cos(phi), -np.sin(phi)],
+            [np.sin(phi), np.cos(phi)],
         ], dtype=np.cdouble) for phi in phis]
         sigma_transition = reduce(direct_sum, sigma_k_transitions)
         final_transition = np.eye(2*copy_num)
@@ -125,7 +219,7 @@ class MeasureOnceQuantumFiniteStateAutomatonLanguage(Qfl[Moqfa, NegOneSided]):
         epsilon = 1/8
         strategy = NegOneSided(epsilon)
 
-        return MeasureOnceQuantumFiniteStateAutomatonLanguage(moqfa, strategy)
+        return cls(moqfa, strategy)
 
     @staticmethod
     def _params_for_modulo_prime(

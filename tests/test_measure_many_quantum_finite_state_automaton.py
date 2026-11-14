@@ -1,3 +1,4 @@
+import functools
 import math
 import unittest
 
@@ -113,6 +114,87 @@ class TestMeasureManyQuantumFiniteStateAutomaton(unittest.TestCase):
                 self.get_end_decisive, self.get_mmqfa,
                 self.qfa_parameters, self.qfa_parameters, self.max_string_len
             )
+
+    def test_word_quotient(self) -> None:
+        for u in [[1] * n for n in range(4)]:
+            def get_quotient(m: Mmqfa) -> Mmqfa:
+                q = m.word_quotient(u)
+                expected_states = (
+                    m.states + len(u) * int(np.sum(m.halting_states))
+                )
+                self.assertEqual(q.states, expected_states)
+                return q
+
+            def get_preimage_str(
+                w: list[int], prefix: list[int] = u
+            ) -> list[int]:
+                return prefix + w
+
+            test_unary_operation(
+                self, get_quotient, lambda x: x,
+                self.get_end_decisive, [1/2, 1/3], 6,
+                get_preimage_str=get_preimage_str,
+                constraint=Mmqfa.is_end_decisive
+            )
+            test_unary_operation(
+                self, get_quotient, lambda x: x,
+                self.get_co_end_decisive, [1/2, 1/3], 6,
+                get_preimage_str=get_preimage_str,
+                constraint=Mmqfa.is_co_end_decisive
+            )
+
+    def test_inverse_homomorphism(self) -> None:
+        for phi in [[[0], []], [[0], [1]], [[0], [1, 1]], [[0], [1, 1, 1]]]:
+            def get_inv_hom(m: Mmqfa) -> Mmqfa:
+                h_m = m.inverse_homomorphism(phi)
+                c_h = max(len(img) for img in phi[1:])
+                expected_max = m.states + c_h * int(np.sum(m.halting_states))
+                self.assertLessEqual(h_m.states, expected_max)
+                return h_m
+
+            def get_preimage_str(
+                w: list[int], mapping: list[list[int]] = phi
+            ) -> list[int]:
+                u: list[int] = functools.reduce(
+                    lambda v, c: v + mapping[c], w, []
+                )
+                return u
+
+            test_unary_operation(
+                self, get_inv_hom, lambda x: x,
+                self.get_end_decisive, [1/2, 1/3], 5,
+                get_preimage_str=get_preimage_str,
+                constraint=Mmqfa.is_end_decisive
+            )
+            test_unary_operation(
+                self, get_inv_hom, lambda x: x,
+                self.get_co_end_decisive, [1/2, 1/3], 5,
+                get_preimage_str=get_preimage_str,
+                constraint=Mmqfa.is_co_end_decisive
+            )
+
+    def test_semantic_end_decisive_halted_rotation(self) -> None:
+        # Non-halting state 0 moves on symbol a to rejecting state 1, while
+        # already-halted state 1 rotates to accepting state 2 (which is never
+        # reached under T_{#w} because P_non zeroes state 1 immediately).
+        u_sos = np.eye(3, dtype=np.cdouble)
+        u_a = np.array(
+            [[0, 0, 1], [1, 0, 0], [0, 1, 0]], dtype=np.cdouble
+        )
+        u_eos = np.array(
+            [[0, 0, 1], [0, 1, 0], [1, 0, 0]], dtype=np.cdouble
+        )
+        mm = Mmqfa(
+            np.stack([u_sos, u_a, u_eos]),
+            np.array([False, False, True]),
+            np.array([False, True, False]),
+        )
+        self.assertTrue(mm.is_end_decisive())
+        self.assertFalse(mm.is_co_end_decisive())
+        self.assertTrue((~mm).is_co_end_decisive())
+        self.assertAlmostEqual(mm([]), 1.0)
+        self.assertAlmostEqual(mm([1]), 0.0)
+        self.assertAlmostEqual(mm([1, 1]), 0.0)
 
 
 if __name__ == '__main__':

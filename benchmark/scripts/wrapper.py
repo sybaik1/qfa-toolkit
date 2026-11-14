@@ -1,6 +1,5 @@
-from typing import Union
+from typing import Optional, Union
 
-from qiskit_ibm_runtime import QiskitRuntimeService  # type: ignore
 from qiskit.transpiler.preset_passmanagers import (  # type: ignore
         generate_preset_pass_manager)
 
@@ -18,15 +17,21 @@ from qiskit_aer import AerSimulator  # type: ignore
 
 
 class ExperimentHandler:
+    """Builds QFA circuits, transpiles them, and collects noisy Aer counts."""
+
     def __init__(
             self,
             test_subject: Union[Moqfa, Moqfl, Mmqfa, Mmqfl],
-            words: list[list[int]],  # canditates for testing on the QFA or QFL
+            words: list[list[int]],  # candidates for testing on the QFA or QFL
             backend,
-            use_entropy_mapping: bool = True,
+            use_density_mapping: bool = True,
             simulator: bool = False,
             shots: int = 10000,
-            retry_limit: int = 3):
+            retry_limit: int = 3,
+            *,
+            use_entropy_mapping: Optional[bool] = None):
+        if use_entropy_mapping is not None:
+            use_density_mapping = use_entropy_mapping
         self.test_subject = test_subject
         self.qfa: Union[Moqfa, Mmqfa]
         self.Qqfa: Union[QMoqfa, QMmqfa]
@@ -40,9 +45,9 @@ class ExperimentHandler:
             self.qfa = test_subject
 
         if isinstance(self.qfa, Moqfa):
-            self.Qqfa = QMoqfa(self.qfa, use_entropy_mapping)
+            self.Qqfa = QMoqfa(self.qfa, use_density_mapping)
         elif isinstance(self.qfa, Mmqfa):
-            self.Qqfa = QMmqfa(self.qfa, use_entropy_mapping)
+            self.Qqfa = QMmqfa(self.qfa, use_density_mapping)
 
         self.words = words
         if simulator:
@@ -126,14 +131,14 @@ class ExperimentHandler:
 
 # %%
 if __name__ == '__main__':
-    service = QiskitRuntimeService()
-    backend = service.get_backend('ibm_hanoi')
+    from qiskit_ibm_runtime.fake_provider import FakeBrisbane  # type: ignore
+    backend = FakeBrisbane()
 
     from mimicnoisemodel import MimicNoiseModel  # type: ignore
-    noise_model = MimicNoiseModel(backend, 0.001)
+    noise_model = MimicNoiseModel(backend, 0.001, 0.001, all_qubit=True)
     aer = AerSimulator(noise_model=noise_model)
 
-    use_entropy_mapping = True
+    use_density_mapping = True
 
     for prime in [3]:
         qfl: Moqfl = Moqfl.from_modulo_prime(prime)
@@ -141,8 +146,8 @@ if __name__ == '__main__':
             qfl,
             [[1], [1, 1], [1, 1, 1]],
             aer,
-            use_entropy_mapping,
-            shots=100000)
+            use_density_mapping,
+            shots=10000)
         handler.make_pool()
         results = handler.run()
         print(results)

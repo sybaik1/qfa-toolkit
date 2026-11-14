@@ -58,7 +58,7 @@ def get_arbitrary_moqfa(k: int) -> Moqfa:
             [1, 0],
             [0, 1],
         ],
-    ], dtype=np.cfloat)
+    ], dtype=np.cdouble)
     transitions = multiply_arbitrary_global_phase(transitions)
     return Moqfa(transitions, acceptings)
 
@@ -87,7 +87,7 @@ def get_arbitrary_mmqfa(r: float) -> Mmqfa:
             [0, 1, 0],
             [1, 0, 0],
         ],
-    ], dtype=np.cfloat)
+    ], dtype=np.cdouble)
     transitions = multiply_arbitrary_global_phase(transitions)
     return Mmqfa(transitions, acceptings, rejectings)
 

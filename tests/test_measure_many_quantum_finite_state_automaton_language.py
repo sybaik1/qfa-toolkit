@@ -60,5 +60,27 @@ class TestMeasureManyQuantumFiniteStateAutomatonLanguage(unittest.TestCase):
             self.assertEqual(language, target)
 
 
+    def test_word_quotient(self):
+        equ_4 = Mmqfl.from_unary_singleton(4)
+        quot = equ_4.word_quotient([1, 1])
+        self.assertEqual(quot.quantum_finite_state_automaton.states, 4 + 2 * 2)
+        self.assertEqual(list(quot.enumerate_length_less_than_n(8)), [[1, 1]])
+
+    def test_inverse_homomorphism(self):
+        equ_6 = Mmqfl.from_unary_singleton(6)
+        inv = equ_6.inverse_homomorphism([[0], [1, 1]])
+        self.assertEqual(inv.quantum_finite_state_automaton.states, 6)
+        self.assertEqual(
+            list(inv.enumerate_length_less_than_n(8)), [[1, 1, 1]]
+        )
+
+    def test_find_unary_constant_margin(self):
+        for k in range(1, 8):
+            N = Mmqfl._find_unary_constant_margin(k)
+            self.assertGreater(N, 1)
+            qfl = Mmqfl.from_unary_singleton(k)
+            self.assertEqual(N, math.ceil(1 / qfl.strategy.epsilon))
+
+
 if __name__ == '__main__':
     unittest.main()

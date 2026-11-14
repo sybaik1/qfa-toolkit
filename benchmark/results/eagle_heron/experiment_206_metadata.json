@@ -1,0 +1,20 @@
+{
+    "index": 206,
+    "qfa size": 16,
+    "qiskit circuit size": 4,
+    "language": "mod_3",
+    "copy_num": 8,
+    "processor": "heron",
+    "backend": "fake_fez",
+    "circuit_mode": "moqfa",
+    "name": "mapping effect, change QFA state number",
+    "shots": 10000,
+    "simulator": true,
+    "mimic_rate_gate": 0.005,
+    "mimic_rate_readout": 0.005,
+    "use_density_mapping": false,
+    "use_entropy_mapping": false,
+    "use_mapping_noise_correction": false,
+    "mape_normalized": 6.2605128205127665,
+    "mean_invalid_shots": 0.0
+}

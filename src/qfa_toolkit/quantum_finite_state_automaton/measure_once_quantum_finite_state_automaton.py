@@ -1,8 +1,12 @@
+from collections import deque
 import math
 from functools import reduce
-from typing import (TypeVar, Optional, )
+from typing import (TypeVar, Optional, Union, overload, )
 
 import numpy as np
+import numpy.typing as npt
+from .quantum_finite_state_automaton_base import (
+    NotClosedUnderOperationException)
 from .quantum_finite_state_automaton_base import Observable
 from .quantum_finite_state_automaton_base import (
     QuantumFiniteStateAutomatonBase)
@@ -54,7 +58,7 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
     def bilinearized_call(self, w: list[int]) -> float:
         tape = self.string_to_tape(w)
         last_superposition = self.process(tape).superposition
-        return sum(self.observable[0] * last_superposition)
+        return float(np.sum(self.observable[0] * last_superposition).real)
 
     def word_transition(self, w: list[int]) -> Transition:
         transition = reduce(
@@ -63,37 +67,94 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         )
         return transition
 
-    def union(self: MoqfaT, other: MoqfaT) -> MoqfaT:
-        """Returns the mn-size union of the two m- and n-size measure-once
-        quantum finite automata.
+    @overload
+    def union(self: MoqfaT, other: MoqfaT) -> MoqfaT: ...
+
+    @overload
+    def union(self, other: Mmqfa) -> Mmqfa: ...
+
+    def union(
+        self: MoqfaT, other: Union[MoqfaT, Mmqfa]
+    ) -> Union[MoqfaT, Mmqfa]:
+        """Returns the mn-size union of two quantum finite automata.
 
         For a quantum finite automaton M and N, the union is defined as the
         quantum finite automaton M' such that 1 - M'(w) = (1 - M(w)) * (1 -
         N(w)) for all w.
 
+        Supports MOQFA | MOQFA (returning an MOQFA) and MOQFA | MMQFA for
+        co-end-decisive MMQFAs (returning an mn-state co-end-decisive MMQFA).
+
         See also intersection().
         """
-        return ~(~self & ~other)
+        if isinstance(other, Mmqfa):
+            if self.alphabet != other.alphabet:
+                raise ValueError("Alphabets must be the same")
+            if not other.is_co_end_decisive():
+                raise NotClosedUnderOperationException()
+            return ~((~self).intersection(~other))
+        return ~((~self).intersection(~other))
 
-    def __or__(self: MoqfaT, other: MoqfaT) -> MoqfaT:
+    @overload
+    def __or__(self: MoqfaT, other: MoqfaT) -> MoqfaT: ...
+
+    @overload
+    def __or__(self, other: Mmqfa) -> Mmqfa: ...
+
+    def __or__(
+        self: MoqfaT, other: Union[MoqfaT, Mmqfa]
+    ) -> Union[MoqfaT, Mmqfa]:
         """Returns the union of the quantum finite automaton.
 
         See union() for details.
         """
+        if isinstance(other, Mmqfa):
+            return self.union(other)
         return self.union(other)
 
-    def intersection(self: MoqfaT, other: MoqfaT) -> MoqfaT:
-        """Returns the mn-size intersection of the measure-once quantum finite
-        automata.
+    @overload
+    def intersection(self: MoqfaT, other: MoqfaT) -> MoqfaT: ...
+
+    @overload
+    def intersection(self, other: Mmqfa) -> Mmqfa: ...
+
+    def intersection(
+        self: MoqfaT, other: Union[MoqfaT, Mmqfa]
+    ) -> Union[MoqfaT, Mmqfa]:
+        """Returns the mn-size intersection of two quantum finite automata.
 
         For a quantum finite automaton M and N, the intersection, also known as
         Hadamard product, is defined as the quantum finite automaton M' such
         that M'(w) = M(w) * N(w) for all w.
 
+        Supports MOQFA & MOQFA (returning an MOQFA) and MOQFA & MMQFA for
+        end-decisive MMQFAs (returning an mn-state end-decisive MMQFA).
+
         Alberto Bertoni, Carlo Mereghetti, and Beatrice Palano. 2003. Quantum
         Computing: 1-Way Quantum Automata. In Proceedings of the 8th
         International Conference on Developments in Language Theory (DLT'04).
         """
+        if isinstance(other, Mmqfa):
+            if self.alphabet != other.alphabet:
+                raise ValueError("Alphabets must be the same")
+            if not other.is_end_decisive():
+                raise NotClosedUnderOperationException()
+            transitions = np.stack([
+                np.kron(u, v) for u, v
+                in zip(self.transitions, other.transitions)
+            ])
+            non_halting_states = np.kron(
+                np.ones(self.states, dtype=bool),
+                other.non_halting_states
+            )
+            halting_states = ~non_halting_states
+            accepting_states = np.kron(
+                self.accepting_states,
+                other.accepting_states
+            )
+            rejecting_states = halting_states & ~accepting_states
+            return Mmqfa(transitions, accepting_states, rejecting_states)
+
         transitions = np.stack([
             np.kron(u, v) for u, v
             in zip(self.transitions, other.transitions)
@@ -105,11 +166,21 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
 
         return self.__class__(transitions, accepting_states)
 
-    def __and__(self: MoqfaT, other: MoqfaT) -> MoqfaT:
+    @overload
+    def __and__(self: MoqfaT, other: MoqfaT) -> MoqfaT: ...
+
+    @overload
+    def __and__(self, other: Mmqfa) -> Mmqfa: ...
+
+    def __and__(
+        self: MoqfaT, other: Union[MoqfaT, Mmqfa]
+    ) -> Union[MoqfaT, Mmqfa]:
         """Returns the intersection of the quantum finite automaton.
 
         See intersection() for details.
         """
+        if isinstance(other, Mmqfa):
+            return self.intersection(other)
         return self.intersection(other)
 
     def complement(self: MoqfaT) -> MoqfaT:
@@ -133,7 +204,7 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
 
     @classmethod
     def linear_combination(
-        cls: MoqfaT,
+        cls: type[MoqfaT],
         *moqfas: MoqfaT,
         coefficients: Optional[list[float]] = None
     ) -> MoqfaT:
@@ -188,7 +259,7 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         For a quantum finite automaton M and a word w, the word quotient M' of
         M with respect to u is an MOQFA M' such that M'(w) = M(uw) for all w.
         """
-        if not all(c <= self.alphabet for c in w):
+        if not all(1 <= c <= self.alphabet for c in w):
             raise ValueError(
                 "w must be a string over the alphabet of the MOQFA")
 
@@ -227,9 +298,7 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         return self.__class__(transitions, self.accepting_states)
 
     def to_measure_many_quantum_finite_state_automaton(self) -> Mmqfa:
-        # TODO: Test this method
         moqfa = self.to_without_final_transition()
-        states = self.states * 2
         transitions = np.stack([
             direct_sum(transition, transition)
             for transition in moqfa.transitions
@@ -239,10 +308,12 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
             {state + self.states: state for state in range(self.states)})
         final_transition = mapping_to_transition(mapping)
         transitions[moqfa.end_of_string] = final_transition
-        accepting_states = np.zeros(states, dtype=bool)
-        accepting_states[moqfa.accepting_states + self.states] = True
-        rejecting_states = np.zeros(states, dtype=bool)
-        rejecting_states[moqfa.rejecting_states + self.states] = True
+        accepting_states = np.concatenate(
+            [np.zeros(self.states, dtype=bool), moqfa.accepting_states]
+        )
+        rejecting_states = np.concatenate(
+            [np.zeros(self.states, dtype=bool), moqfa.rejecting_states]
+        )
         return Mmqfa(transitions, accepting_states, rejecting_states)
 
     def to_without_final_transition(self: MoqfaT) -> MoqfaT:
@@ -323,12 +394,12 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         """
 
         bilinear_transitions = np.stack([
-            np.kron(transition.T.conj(), transition)
+            np.kron(transition.conj(), transition)
             for transition in self.transitions
         ])
         accepting_states = np.zeros(self.states ** 2, dtype=bool)
         indices = self.accepting_states.nonzero()[0]
-        accepting_states[[i * i for i in indices]] = True
+        accepting_states[[i * self.states + i for i in indices]] = True
         return self.__class__(bilinear_transitions, accepting_states)
 
     def to_stochastic(self: MoqfaT) -> MoqfaT:
@@ -345,7 +416,9 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
 
         return self.bilinearize().to_real_valued()
 
-    def counter_example(self, other: MoqfaT) -> Optional[list[int]]:
+    def counter_example(
+        self: MoqfaT, other: 'MeasureOnceQuantumFiniteStateAutomaton'
+    ) -> Optional[list[int]]:
         """Returns a counter example of the equivalence of the measure-once
         quantum finite automaton.
 
@@ -355,48 +428,56 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         Lvzhou Li and Daowen Qiu. 2009. A note on quantum sequential machines.
         Theoretical Computer Science (TCS'09).
         """
-        self = self.to_bilinear()
-        other = other.to_bilinear()
-        m = self.__class__.linear_combination(self, other)
+        if self.alphabet != other.alphabet:
+            raise ValueError("Alphabets must be the same")
 
-        empty_string: list[int] = []
-        # TODO: Implement a trie
-        ws = [empty_string]
-        basis_vector = m.process([m.start_of_string]).superposition
-        basis = np.array([basis_vector])
-        queue = [(empty_string, basis_vector)]
-        while len(queue) > 0:
-            w, basis_vector = queue.pop()
-            for c in range(1, m.alphabet + 1):
+        b1 = self.to_bilinear()
+        b2 = other.to_bilinear()
+        d1 = b1.states
+
+        def diff(v: npt.NDArray[np.cdouble]) -> complex:
+            end1 = b1.final_transition @ v[:d1]
+            end2 = b2.final_transition @ v[d1:]
+            val1 = np.sum(b1.accepting_states * end1)
+            val2 = np.sum(b2.accepting_states * end2)
+            return complex(val1 - val2)
+
+        v0 = np.concatenate(
+            [b1.initial_transition[:, 0], b2.initial_transition[:, 0]]
+        ).astype(np.cdouble)
+        if abs(diff(v0)) > 1e-9:
+            return []
+
+        basis: list[npt.NDArray[np.cdouble]] = [
+            v0 / float(np.linalg.norm(v0))
+        ]
+        queue: deque[tuple[list[int], npt.NDArray[np.cdouble]]] = deque(
+            [([], v0)]
+        )
+        while queue:
+            w, v = queue.popleft()
+            for c in range(1, self.alphabet + 1):
                 wc = w + [c]
-                basis_vector_candidate = (
-                    TotalState(basis_vector)
-                    .apply(m.transitions[c])
-                    .superposition
-                )
-                basis_candidate = np.concatenate(
-                    [basis, [basis_vector_candidate]])
-                S = np.linalg.svd(basis_candidate, compute_uv=False)
-                if np.allclose(S[-1], 0):
+                v_next = np.concatenate([
+                    b1.transitions[c] @ v[:d1],
+                    b2.transitions[c] @ v[d1:]
+                ]).astype(np.cdouble)
+                r = v_next
+                for _ in range(2):
+                    for b in basis:
+                        r = r - np.vdot(b, r) * b
+                norm_r = float(np.linalg.norm(r))
+                if norm_r <= 1e-9:
                     continue
-
-                ws.append(wc)
-                basis = basis_candidate
-                queue.append((wc, basis_vector_candidate))
-
-        for w, basis_vector in zip(ws, basis):
-            basis_vector *= math.sqrt(2)  # normalize
-            total_state_1 = TotalState(basis_vector[:self.states])
-            total_state_2 = TotalState(basis_vector[self.states:])
-
-            x = total_state_1.measure_by(self.observable).acceptance
-            y = total_state_2.measure_by(other.observable).acceptance
-            is_equal = math.isclose(x, y, abs_tol=1e-9)
-            if not is_equal:
-                return w
+                if abs(diff(v_next)) > 1e-9:
+                    return wc
+                basis.append(r / norm_r)
+                queue.append((wc, v_next))
         return None
 
-    def equivalence(self, other: MoqfaT) -> bool:
+    def equivalence(
+        self: MoqfaT, other: 'MeasureOnceQuantumFiniteStateAutomaton'
+    ) -> bool:
         """Returns whether the two measure-once quantum finite automata are
         equal.
 
@@ -406,3 +487,10 @@ class MeasureOnceQuantumFiniteStateAutomaton(QuantumFiniteStateAutomatonBase):
         See also counter_example().
         """
         return self.counter_example(other) is None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, MeasureOnceQuantumFiniteStateAutomaton):
+            return False
+        if self.alphabet != other.alphabet:
+            return False
+        return self.equivalence(other)

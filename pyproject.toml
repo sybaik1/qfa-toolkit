@@ -6,28 +6,28 @@ name = "qfa-toolkit"
 authors = [
   {name = "SeungYeop Baik", email = "sybaik2006@gmail.com"},
   {name = "Sicheol Sung", email = "sicheol.sung@yonsei.ac.kr"},
-  {name = "Sungmin Kim", email = "rena_rio@yonsei.ac.kr"},
+  {name = "Yo-Sub Han", email = "emmous@yonsei.ac.kr"},
 ]
 dependencies = [
-  "numpy~=1.26.3",
-  "scipy~=1.12.0",
-  "qiskit~=1.0.2",
-  "qiskit-ibm-runtime~=0.22.0",
-  "qiskit-aer~=0.14.0",
-  "scikit-learn~=1.4.2",
+  "numpy>=2.0.0",
+  "scipy>=1.14.0",
+  "qiskit>=2.0.0",
+  "qiskit-ibm-runtime>=0.30.0",
+  "qiskit-aer>=0.15.0",
 ]
+requires-python = ">=3.10"
 optional-dependencies.dev = [
-  "mypy~=1.8.0",
-  "jupyter~=1.0.0",
-  "jupytext~=1.16.1",
-  "matplotlib~=3.8.4",
+  "mypy>=1.15.0",
+  "jupyter>=1.1.0",
+  "jupytext>=1.16.0",
+  "matplotlib>=3.9.0",
 ]
-version = "0.0.1"
+version = "1.0.0"
 
 # mypy global options:
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 mypy_path = "src"
 # warn_return_any = true
 # warn_unused_configs = true

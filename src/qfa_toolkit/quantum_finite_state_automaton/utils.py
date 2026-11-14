@@ -10,9 +10,9 @@ def direct_sum(u: Transition, v: Transition) -> Transition:
     Direct sum of U, V: (U, V) |-> [U 0; 0 V]
     """
     w1 = np.concatenate(
-        (u, np.zeros((u.shape[0], v.shape[1]))), axis=1)
+        (u, np.zeros((u.shape[0], v.shape[1]), dtype=np.cdouble)), axis=1)
     w2 = np.concatenate(
-        (np.zeros((v.shape[0], u.shape[1])), v), axis=1)
+        (np.zeros((v.shape[0], u.shape[1]), dtype=np.cdouble), v), axis=1)
     w = np.concatenate((w1, w2), axis=0)
     return w
 

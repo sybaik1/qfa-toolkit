@@ -1,6 +1,7 @@
 import abc
 import math
 import numpy as np
+from qiskit import QuantumCircuit, QuantumRegister  # type: ignore
 
 from .utils import unitary_matrix_to_circuit
 from ..quantum_finite_state_automaton.quantum_finite_state_automaton_base import (
@@ -16,7 +17,7 @@ class QiskitQuantumFiniteStateAutomaton(abc.ABC):
         mapping: dict[int, int]
         defined_states: set[int]
         undefined_states: set[int]
-        circuit: list[QuantumCircuit]
+        circuit: dict[int, UnitaryGate]
         """
         self.qfa = qfa
         self.get_size()
@@ -45,11 +46,19 @@ class QiskitQuantumFiniteStateAutomaton(abc.ABC):
     def reverse_mapping(self) -> dict[int, int]:
         return {v: k for k, v in self.mapping.items()}
 
-    def get_size(self):
-        self.size = math.ceil(math.log2(self.qfa.states))
+    def get_size(self) -> None:
+        self.size = max(1, math.ceil(math.log2(self.qfa.states)))
 
-    def get_mapping(self):
+    def get_mapping(self) -> None:
         pass
+
+    def _prepare_initial_state(
+        self, circuit: QuantumCircuit, qreg_states: QuantumRegister
+    ) -> None:
+        init_basis = self.mapping[0]
+        for bit in range(self.size):
+            if (init_basis >> bit) & 1:
+                circuit.x(qreg_states[bit])
 
     def _transition_to_circuit(self, transition, character: str):
         # make unitary matrix to be a square matrix of size 2^n

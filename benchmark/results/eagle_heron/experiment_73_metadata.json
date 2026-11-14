@@ -1,0 +1,20 @@
+{
+    "index": 73,
+    "qfa size": 26,
+    "qiskit circuit size": 5,
+    "language": "mod_5",
+    "copy_num": 0,
+    "processor": "eagle",
+    "backend": "fake_brisbane",
+    "circuit_mode": "moqfa",
+    "name": "mapping effect, mimic rate change",
+    "shots": 10000,
+    "simulator": true,
+    "mimic_rate_gate": 0.001,
+    "mimic_rate_readout": 0.001,
+    "use_density_mapping": true,
+    "use_entropy_mapping": true,
+    "use_mapping_noise_correction": false,
+    "mape_normalized": 5.46716786789459,
+    "mean_invalid_shots": 337.43589743589746
+}
